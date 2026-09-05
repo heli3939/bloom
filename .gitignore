@@ -209,6 +209,14 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Bloom local configuration and generated files
+frontend/.env
+frontend/node_modules/
+frontend/dist/
+backend/.env
+backend/venv/
+.DS_Store
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
