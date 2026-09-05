@@ -1,88 +1,132 @@
-import { useReducer } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  bootstrapDemo,
+  createTree,
+  getDailyTasks,
+  getTree,
+  submitDailyTask,
+} from '../services/api'
 
-const initialState = {
-  hasActiveTree: false,
-  treeProgress: 0,
-  completedTaskIds: [],
-  submissionsByTask: {},
-  treeReferencePhoto: null,
-}
+const FRIEND_PLACEHOLDER_PHOTO =
+  'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
 
-function applySubmission(state, task, submission) {
-  const taskSubmissions = {
-    currentUser: null,
-    friendSubmitted: false,
-    ...state.submissionsByTask[task.id],
-    ...submission,
-  }
+export function useDailyTasks() {
+  const [context, setContext] = useState(null)
+  const [tree, setTree] = useState(null)
+  const [tasks, setTasks] = useState([])
+  const [photosByTask, setPhotosByTask] = useState({})
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  const wasCompleted = state.completedTaskIds.includes(task.id)
-  const isNowCompleted = Boolean(taskSubmissions.currentUser && taskSubmissions.friendSubmitted)
+  const loadTree = useCallback(async (treeId, demoContext) => {
+    const [loadedTree, loadedTasks] = await Promise.all([
+      getTree(treeId),
+      getDailyTasks(treeId),
+    ])
+    setTree(loadedTree)
+    setTasks(loadedTasks)
+    setPhotosByTask((current) => {
+      const restored = { ...current }
+      for (const task of loadedTasks) {
+        if (task.submittedUserIds.includes(demoContext.currentUserId)) {
+          restored[task.id] ??= { name: 'Submitted photo', previewUrl: null }
+        }
+      }
+      return restored
+    })
+  }, [])
 
-  return {
-    ...state,
-    treeProgress:
-      isNowCompleted && !wasCompleted
-        ? Math.min(100, state.treeProgress + task.growthValue)
-        : state.treeProgress,
-    completedTaskIds:
-      isNowCompleted && !wasCompleted
-        ? [...state.completedTaskIds, task.id]
-        : state.completedTaskIds,
-    submissionsByTask: {
-      ...state.submissionsByTask,
-      [task.id]: taskSubmissions,
-    },
-  }
-}
+  useEffect(() => {
+    let cancelled = false
 
-function dailyTasksReducer(state, action) {
-  if (action.type === 'start-new-tree') {
-    if (!action.referencePhoto) return state
+    async function initialise() {
+      try {
+        const demoContext = await bootstrapDemo()
+        if (cancelled) return
+        setContext(demoContext)
+        if (demoContext.activeTreeId) {
+          await loadTree(demoContext.activeTreeId, demoContext)
+        }
+      } catch (requestError) {
+        if (!cancelled) setError(requestError.message)
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
 
-    return {
-      hasActiveTree: true,
-      treeProgress: 0,
-      completedTaskIds: [],
-      submissionsByTask: {},
-      treeReferencePhoto: action.referencePhoto,
+    initialise()
+    return () => {
+      cancelled = true
+    }
+  }, [loadTree])
+
+  async function runRequest(action) {
+    setError('')
+    try {
+      await action()
+    } catch (requestError) {
+      setError(requestError.message)
     }
   }
 
-  const existingSubmission = state.submissionsByTask[action.task?.id]
-
-  switch (action.type) {
-    case 'submit-current-user-photo':
-      if (existingSubmission?.currentUser) return state
-      return applySubmission(state, action.task, { currentUser: action.photo })
-
-    case 'simulate-friend-submission':
-      if (existingSubmission?.friendSubmitted) return state
-      return applySubmission(state, action.task, { friendSubmitted: true })
-
-    default:
-      return state
-  }
-}
-
-export function useDailyTasks() {
-  const [state, dispatch] = useReducer(dailyTasksReducer, initialState)
-
-  function submitCurrentUserPhoto(task, photo) {
-    dispatch({ type: 'submit-current-user-photo', task, photo })
+  async function startNewTree(referencePhoto) {
+    if (!context) return
+    await runRequest(async () => {
+      const createdTree = await createTree({
+        userIds: [context.currentUserId, context.friendUserId],
+        speciesId: context.speciesId,
+        referencePhotoUrl: referencePhoto.previewUrl,
+      })
+      setTree(createdTree)
+      setPhotosByTask({})
+      setTasks(await getDailyTasks(createdTree._id))
+    })
   }
 
-  function simulateFriendSubmission(task) {
-    dispatch({ type: 'simulate-friend-submission', task })
+  async function submitCurrentUserPhoto(task, photo) {
+    if (!context || !tree) return
+    await runRequest(async () => {
+      await submitDailyTask(task.id, {
+        userId: context.currentUserId,
+        photoUrl: photo.previewUrl,
+      })
+      setPhotosByTask((current) => ({ ...current, [task.id]: photo }))
+      await loadTree(tree._id, context)
+    })
   }
 
-  function startNewTree(referencePhoto) {
-    dispatch({ type: 'start-new-tree', referencePhoto })
+  async function simulateFriendSubmission(task) {
+    if (!context || !tree) return
+    await runRequest(async () => {
+      await submitDailyTask(task.id, {
+        userId: context.friendUserId,
+        photoUrl: FRIEND_PLACEHOLDER_PHOTO,
+      })
+      await loadTree(tree._id, context)
+    })
   }
+
+  const submissionsByTask = Object.fromEntries(
+    tasks.map((task) => [
+      task.id,
+      {
+        currentUser: task.submittedUserIds.includes(context?.currentUserId)
+          ? photosByTask[task.id] ?? { name: 'Submitted photo', previewUrl: null }
+          : null,
+        friendSubmitted: task.submittedUserIds.includes(context?.friendUserId),
+      },
+    ]),
+  )
 
   return {
-    ...state,
-    isTreeCompleted: state.hasActiveTree && state.treeProgress === 100,
+    hasActiveTree: Boolean(tree),
+    treeProgress: tree?.growth ?? 0,
+    isTreeCompleted: tree?.status === 'completed',
+    completedTaskIds: tasks.filter((task) => task.completed).map((task) => task.id),
+    submissionsByTask,
+    tasks,
+    isLoading,
+    error,
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,

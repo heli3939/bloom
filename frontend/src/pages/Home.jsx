@@ -2,7 +2,6 @@ import { useState } from 'react'
 import NewTreeForm from '../components/NewTreeForm'
 import TaskCard from '../components/TaskCard'
 import TreeProgress from '../components/TreeProgress'
-import { mockTasks } from '../data/mockTasks'
 import { useDailyTasks } from '../hooks/useDailyTasks'
 
 function Home() {
@@ -16,11 +15,18 @@ function Home() {
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,
+    tasks,
+    isLoading,
+    error,
   } = useDailyTasks()
 
   function handleNewTreeConfirmation(referencePhoto) {
     startNewTree(referencePhoto)
     setIsCreatingNewTree(false)
+  }
+
+  if (isLoading) {
+    return <main><p>Connecting to Bloom API…</p></main>
   }
 
   if (!hasActiveTree) {
@@ -30,6 +36,7 @@ function Home() {
           <h1>Bloom</h1>
           <p>You and your friend are connected. Start your first shared tree.</p>
         </header>
+        {error && <p role="alert">{error}</p>}
         <NewTreeForm onConfirm={handleNewTreeConfirmation} />
       </main>
     )
@@ -43,6 +50,7 @@ function Home() {
       </header>
 
       <TreeProgress progress={treeProgress} />
+      {error && <p role="alert">{error}</p>}
 
       {isTreeCompleted ? (
         <section aria-labelledby="tree-complete-heading">
@@ -60,7 +68,7 @@ function Home() {
         <section aria-labelledby="daily-tasks-heading">
           <h2 id="daily-tasks-heading">Today&apos;s tasks</h2>
           <div className="task-list">
-            {mockTasks.map((task) => (
+            {tasks.map((task) => (
               <TaskCard
                 key={task.id}
                 task={task}

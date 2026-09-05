@@ -63,7 +63,7 @@ function TaskCard({
           disabled={Boolean(submittedPhoto)}
         />
 
-        {previewPhoto && (
+        {previewPhoto?.previewUrl && (
           <figure>
             <img
               className="photo-preview"

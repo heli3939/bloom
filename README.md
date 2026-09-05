@@ -48,6 +48,14 @@ npm run dev
 
 The frontend runs at <http://localhost:5173> and uses Vite's API proxy.
 
+To work on the frontend without starting the backend or MongoDB, use the explicit
+browser-only demo mode:
+
+```bash
+cd frontend
+npm run dev:demo
+```
+
 ## Useful commands
 
 ```bash

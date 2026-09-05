@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import close_database_connection
-from app.routes import auth, friends, health, tasks, trees
+from app.routes import auth, dev, friends, health, tasks, trees
 
 settings = get_settings()
 
@@ -36,6 +36,7 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(friends.router, prefix=settings.api_prefix)
 app.include_router(trees.router, prefix=settings.api_prefix)
 app.include_router(tasks.router, prefix=settings.api_prefix)
+app.include_router(dev.router, prefix=settings.api_prefix)
 
 
 @app.get("/", tags=["meta"])
