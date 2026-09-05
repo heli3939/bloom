@@ -13,6 +13,27 @@ progress {
   width: 100%;
 }
 
+.tree-placeholder {
+  padding: 2rem 1rem;
+  border: 1px dashed #999;
+  text-align: center;
+}
+
+.tree-placeholder p {
+  margin-top: 0;
+}
+
+.tree-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.tree-stages [aria-current='step'] {
+  font-weight: bold;
+}
+
 .task-list {
   display: grid;
   gap: 1rem;
