@@ -34,6 +34,14 @@ function applySubmission(state, task, submission) {
 }
 
 function dailyTasksReducer(state, action) {
+  if (action.type === 'start-new-tree') {
+    return {
+      treeProgress: 0,
+      completedTaskIds: [],
+      submissionsByTask: {},
+    }
+  }
+
   const existingSubmission = state.submissionsByTask[action.task?.id]
 
   switch (action.type) {
@@ -61,9 +69,15 @@ export function useDailyTasks() {
     dispatch({ type: 'simulate-friend-submission', task })
   }
 
+  function startNewTree() {
+    dispatch({ type: 'start-new-tree' })
+  }
+
   return {
     ...state,
+    isTreeCompleted: state.treeProgress === 100,
     submitCurrentUserPhoto,
     simulateFriendSubmission,
+    startNewTree,
   }
 }
