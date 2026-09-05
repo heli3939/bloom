@@ -68,12 +68,12 @@ def bootstrap_demo(db: Database = Depends(get_database)):
             upsert=True,
         )
 
-    active_tree = db.TREES.find_one(
-        {"userIds": {"$all": user_ids}, "status": "active"}, sort=[("createdAt", -1)]
+    latest_tree = db.TREES.find_one(
+        {"userIds": {"$all": user_ids}}, sort=[("createdAt", -1)]
     )
     return {
         "currentUserId": str(user_ids[0]),
         "friendUserId": str(user_ids[1]),
         "speciesId": str(species["_id"]),
-        "activeTreeId": str(active_tree["_id"]) if active_tree else None,
+        "activeTreeId": str(latest_tree["_id"]) if latest_tree else None,
     }

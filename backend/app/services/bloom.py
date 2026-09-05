@@ -1,5 +1,5 @@
 import random
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Dict, List
 
 from bson import ObjectId
@@ -31,6 +31,18 @@ def serialize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
     result["userIds"] = [str(user_id) for user_id in result["userIds"]]
     result["speciesId"] = str(result["speciesId"])
     return result
+
+
+def expire_inactive_tree(db: Database, tree: Dict[str, Any]) -> Dict[str, Any]:
+    if tree.get("status") != "active":
+        return tree
+    last_activity = tree.get("lastActivityAt", tree.get("createdAt"))
+    if last_activity and last_activity.tzinfo is None:
+        last_activity = last_activity.replace(tzinfo=timezone.utc)
+    if last_activity and datetime.now(timezone.utc) - last_activity >= timedelta(days=15):
+        db.TREES.update_one({"_id": tree["_id"]}, {"$set": {"status": "dead"}})
+        tree["status"] = "dead"
+    return tree
 
 
 def ensure_indexes(db: Database) -> None:
@@ -72,6 +84,7 @@ def get_tree(db: Database, tree_id: str) -> Dict[str, Any]:
     tree = db.TREES.find_one({"_id": object_id(tree_id, "treeId")})
     if not tree:
         raise BloomError(404, "Tree was not found")
+    tree = expire_inactive_tree(db, tree)
     return serialize_tree(tree)
 
 
@@ -80,8 +93,11 @@ def get_or_create_daily_tasks(
 ) -> List[Dict[str, Any]]:
     ensure_indexes(db)
     tree_object_id = object_id(tree_id, "treeId")
-    if not db.TREES.find_one({"_id": tree_object_id}):
+    tree = db.TREES.find_one({"_id": tree_object_id})
+    if not tree:
         raise BloomError(404, "Tree was not found")
+    if expire_inactive_tree(db, tree).get("status") != "active":
+        raise BloomError(409, "Tree is not active")
 
     task_date = utc_day(task_day)
     daily_tasks = list(db.DAILY_TASKS.find({"treeId": tree_object_id, "taskDate": task_date}))
@@ -147,6 +163,7 @@ def submit_daily_task(
     tree = db.TREES.find_one({"_id": daily_task["treeId"]})
     if not tree:
         raise BloomError(404, "Tree was not found")
+    tree = expire_inactive_tree(db, tree)
     if user_id not in tree["userIds"]:
         raise BloomError(403, "User does not belong to this tree")
     if tree.get("status") != "active":

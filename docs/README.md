@@ -15,6 +15,9 @@ A daily task is completed after both users have submitted it. Each tree can comp
 at most three tasks per day. Completing a task adds its configured `growthValue` to
 the tree, capped at 100.
 
+If no shared task is completed for 15 days, the active tree changes to `dead` and
+cannot accept more submissions. The pair must create a new tree, starting at 0%.
+
 The current frontend calls the development bootstrap endpoint on startup and stores
 selected images as data URLs. Replace that temporary behavior with authenticated user
 IDs and uploaded file URLs when authentication and image storage are added.

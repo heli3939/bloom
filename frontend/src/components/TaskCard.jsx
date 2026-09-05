@@ -4,12 +4,15 @@ function TaskCard({
   task,
   submission,
   isCompleted,
+  isDailyLimitReached,
+  canSimulateFriend,
   onSubmitPhoto,
   onSimulateFriendSubmission,
 }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null)
   const submittedPhoto = submission.currentUser
   const previewPhoto = submittedPhoto ?? selectedPhoto
+  const isLockedByDailyLimit = isDailyLimitReached && !isCompleted
 
   function handlePhotoSelection(event) {
     const file = event.target.files?.[0]
@@ -60,7 +63,7 @@ function TaskCard({
           type="file"
           accept="image/*"
           onChange={handlePhotoSelection}
-          disabled={Boolean(submittedPhoto)}
+          disabled={Boolean(submittedPhoto) || isLockedByDailyLimit}
         />
 
         {previewPhoto?.previewUrl && (
@@ -74,22 +77,34 @@ function TaskCard({
           </figure>
         )}
 
-        <button type="submit" disabled={!selectedPhoto || Boolean(submittedPhoto)}>
-          {submittedPhoto ? 'Photo submitted' : 'Submit my photo'}
+        <button
+          type="submit"
+          disabled={!selectedPhoto || Boolean(submittedPhoto) || isLockedByDailyLimit}
+        >
+          {isLockedByDailyLimit
+            ? 'Daily limit reached'
+            : submittedPhoto
+              ? 'Photo submitted'
+              : 'Submit my photo'}
         </button>
       </form>
 
-      <button
-        type="button"
-        onClick={() => onSimulateFriendSubmission(task)}
-        disabled={submission.friendSubmitted}
-      >
-        {submission.friendSubmitted
-          ? 'Friend submission simulated'
-          : 'Development only: Simulate friend submission'}
-      </button>
+      {canSimulateFriend && (
+        <button
+          type="button"
+          onClick={() => onSimulateFriendSubmission(task)}
+          disabled={submission.friendSubmitted || isLockedByDailyLimit}
+        >
+          {isLockedByDailyLimit
+            ? 'Daily limit reached'
+            : submission.friendSubmitted
+              ? 'Friend submission simulated'
+              : 'Development only: Simulate friend submission'}
+        </button>
+      )}
 
       {isCompleted && <p><strong>Task completed by both users.</strong></p>}
+      {isLockedByDailyLimit && <p>This task cannot be submitted today.</p>}
     </article>
   )
 }

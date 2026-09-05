@@ -2,6 +2,7 @@ import * as mockApi from './mockApi'
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? ''
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+export const demoModeEnabled = DEMO_MODE
 
 export async function getHealth() {
   return request('/api/health')
@@ -49,4 +50,9 @@ export function submitDailyTask(dailyTaskId, { userId, photoUrl }) {
     method: 'POST',
     body: JSON.stringify({ userId, photoUrl }),
   })
+}
+
+export function advanceDemoDay() {
+  if (!DEMO_MODE) throw new Error('Simulate next day is only available in demo mode')
+  return mockApi.advanceDemoDay()
 }

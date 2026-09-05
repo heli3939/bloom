@@ -10,15 +10,21 @@ function Home() {
     hasActiveTree,
     treeProgress,
     isTreeCompleted,
+    isTreeDead,
     completedTaskIds,
     submissionsByTask,
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,
     tasks,
+    dayNumber,
     isLoading,
     error,
+    isDemoMode,
+    simulateNextDay,
   } = useDailyTasks()
+  const completedToday = completedTaskIds.length
+  const isDailyLimitReached = completedToday >= 3
 
   function handleNewTreeConfirmation(referencePhoto) {
     startNewTree(referencePhoto)
@@ -38,6 +44,23 @@ function Home() {
         </header>
         {error && <p role="alert">{error}</p>}
         <NewTreeForm onConfirm={handleNewTreeConfirmation} />
+      </main>
+    )
+  }
+
+  if (isTreeDead) {
+    return (
+      <main>
+        <header>
+          <h1>Bloom</h1>
+        </header>
+        <section aria-labelledby="tree-dead-heading">
+          <h2 id="tree-dead-heading">Your tree has died</h2>
+          <p>No shared tasks were completed for 15 days.</p>
+          <p>Plant a new tree together and begin again from 0%.</p>
+          {error && <p role="alert">{error}</p>}
+          <NewTreeForm onConfirm={handleNewTreeConfirmation} />
+        </section>
       </main>
     )
   }
@@ -66,7 +89,19 @@ function Home() {
         </section>
       ) : (
         <section aria-labelledby="daily-tasks-heading">
-          <h2 id="daily-tasks-heading">Today&apos;s tasks</h2>
+          <h2 id="daily-tasks-heading">Today&apos;s tasks — Day {dayNumber}</h2>
+          <p><strong>{completedToday}/3 completed</strong></p>
+          <p>You and your friend can complete at most three shared tasks each day.</p>
+          {isDailyLimitReached && (
+            <p role="status">
+              Today&apos;s task limit has been reached. Come back tomorrow for five fresh tasks.
+            </p>
+          )}
+          {isDemoMode && (
+            <button type="button" onClick={simulateNextDay}>
+              Simulate next day
+            </button>
+          )}
           <div className="task-list">
             {tasks.map((task) => (
               <TaskCard
@@ -77,6 +112,8 @@ function Home() {
                   friendSubmitted: false,
                 }}
                 isCompleted={completedTaskIds.includes(task.id)}
+                isDailyLimitReached={isDailyLimitReached}
+                canSimulateFriend={isDemoMode}
                 onSubmitPhoto={submitCurrentUserPhoto}
                 onSimulateFriendSubmission={simulateFriendSubmission}
               />

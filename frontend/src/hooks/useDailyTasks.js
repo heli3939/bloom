@@ -1,14 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  advanceDemoDay,
   bootstrapDemo,
   createTree,
   getDailyTasks,
   getTree,
   submitDailyTask,
+  demoModeEnabled,
 } from '../services/api'
 
 const FRIEND_PLACEHOLDER_PHOTO =
   'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
+
+function calendarDayNumber(tree, tasks) {
+  if (!tree || !tasks[0]) return 1
+  const started = new Date(tree.createdAt)
+  const taskDate = new Date(tasks[0].taskDate)
+  const startedDay = Date.UTC(started.getUTCFullYear(), started.getUTCMonth(), started.getUTCDate())
+  const currentDay = Date.UTC(taskDate.getUTCFullYear(), taskDate.getUTCMonth(), taskDate.getUTCDate())
+  return Math.max(1, Math.floor((currentDay - startedDay) / 86_400_000) + 1)
+}
 
 export function useDailyTasks() {
   const [context, setContext] = useState(null)
@@ -19,10 +30,8 @@ export function useDailyTasks() {
   const [error, setError] = useState('')
 
   const loadTree = useCallback(async (treeId, demoContext) => {
-    const [loadedTree, loadedTasks] = await Promise.all([
-      getTree(treeId),
-      getDailyTasks(treeId),
-    ])
+    const loadedTree = await getTree(treeId)
+    const loadedTasks = loadedTree.status === 'active' ? await getDailyTasks(treeId) : []
     setTree(loadedTree)
     setTasks(loadedTasks)
     setPhotosByTask((current) => {
@@ -106,6 +115,14 @@ export function useDailyTasks() {
     })
   }
 
+  async function simulateNextDay() {
+    await runRequest(async () => {
+      await advanceDemoDay()
+      setPhotosByTask({})
+      await loadTree(tree._id, context)
+    })
+  }
+
   const submissionsByTask = Object.fromEntries(
     tasks.map((task) => [
       task.id,
@@ -122,13 +139,17 @@ export function useDailyTasks() {
     hasActiveTree: Boolean(tree),
     treeProgress: tree?.growth ?? 0,
     isTreeCompleted: tree?.status === 'completed',
+    isTreeDead: tree?.status === 'dead',
     completedTaskIds: tasks.filter((task) => task.completed).map((task) => task.id),
     submissionsByTask,
     tasks,
+    dayNumber: calendarDayNumber(tree, tasks),
     isLoading,
     error,
+    isDemoMode: demoModeEnabled,
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,
+    simulateNextDay,
   }
 }
