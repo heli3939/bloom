@@ -1,9 +1,11 @@
 import { useReducer } from 'react'
 
 const initialState = {
+  hasActiveTree: false,
   treeProgress: 0,
   completedTaskIds: [],
   submissionsByTask: {},
+  treeReferencePhoto: null,
 }
 
 function applySubmission(state, task, submission) {
@@ -18,6 +20,7 @@ function applySubmission(state, task, submission) {
   const isNowCompleted = Boolean(taskSubmissions.currentUser && taskSubmissions.friendSubmitted)
 
   return {
+    ...state,
     treeProgress:
       isNowCompleted && !wasCompleted
         ? Math.min(100, state.treeProgress + task.growthValue)
@@ -35,10 +38,14 @@ function applySubmission(state, task, submission) {
 
 function dailyTasksReducer(state, action) {
   if (action.type === 'start-new-tree') {
+    if (!action.referencePhoto) return state
+
     return {
+      hasActiveTree: true,
       treeProgress: 0,
       completedTaskIds: [],
       submissionsByTask: {},
+      treeReferencePhoto: action.referencePhoto,
     }
   }
 
@@ -69,13 +76,13 @@ export function useDailyTasks() {
     dispatch({ type: 'simulate-friend-submission', task })
   }
 
-  function startNewTree() {
-    dispatch({ type: 'start-new-tree' })
+  function startNewTree(referencePhoto) {
+    dispatch({ type: 'start-new-tree', referencePhoto })
   }
 
   return {
     ...state,
-    isTreeCompleted: state.treeProgress === 100,
+    isTreeCompleted: state.hasActiveTree && state.treeProgress === 100,
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,

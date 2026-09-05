@@ -1,10 +1,14 @@
+import { useState } from 'react'
+import NewTreeForm from '../components/NewTreeForm'
 import TaskCard from '../components/TaskCard'
 import TreeProgress from '../components/TreeProgress'
 import { mockTasks } from '../data/mockTasks'
 import { useDailyTasks } from '../hooks/useDailyTasks'
 
 function Home() {
+  const [isCreatingNewTree, setIsCreatingNewTree] = useState(false)
   const {
+    hasActiveTree,
     treeProgress,
     isTreeCompleted,
     completedTaskIds,
@@ -13,6 +17,23 @@ function Home() {
     simulateFriendSubmission,
     startNewTree,
   } = useDailyTasks()
+
+  function handleNewTreeConfirmation(referencePhoto) {
+    startNewTree(referencePhoto)
+    setIsCreatingNewTree(false)
+  }
+
+  if (!hasActiveTree) {
+    return (
+      <main>
+        <header>
+          <h1>Bloom</h1>
+          <p>You and your friend are connected. Start your first shared tree.</p>
+        </header>
+        <NewTreeForm onConfirm={handleNewTreeConfirmation} />
+      </main>
+    )
+  }
 
   return (
     <main>
@@ -27,7 +48,13 @@ function Home() {
         <section aria-labelledby="tree-complete-heading">
           <h2 id="tree-complete-heading">Your tree has fully bloomed!</h2>
           <p>You and your friend completed this tree together.</p>
-          <button type="button" onClick={startNewTree}>Start a new tree</button>
+          {isCreatingNewTree ? (
+            <NewTreeForm onConfirm={handleNewTreeConfirmation} />
+          ) : (
+            <button type="button" onClick={() => setIsCreatingNewTree(true)}>
+              Start a new tree
+            </button>
+          )}
         </section>
       ) : (
         <section aria-labelledby="daily-tasks-heading">

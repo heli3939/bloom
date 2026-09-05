@@ -58,8 +58,15 @@ progress {
 }
 
 .task-card form,
-.task-card figure {
+.task-card figure,
+.new-tree-form figure {
   margin: 1rem 0;
+}
+
+.new-tree-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
 }
 
 .photo-preview {

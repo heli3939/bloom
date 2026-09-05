@@ -3,7 +3,7 @@ export const mockTasks = [
     id: 'phone-free-hangout',
     title: 'Phone-free hangout',
     description: 'Spend some uninterrupted time together without your phones.',
-    growthValue: 10,
+    growthValue: 100,
   },
   {
     id: 'walk-together',
