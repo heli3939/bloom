@@ -4,7 +4,13 @@ import { mockTasks } from '../data/mockTasks'
 import { useDailyTasks } from '../hooks/useDailyTasks'
 
 function Home() {
-  const { treeProgress, completedTaskIds, completeTask } = useDailyTasks()
+  const {
+    treeProgress,
+    completedTaskIds,
+    submissionsByTask,
+    submitCurrentUserPhoto,
+    simulateFriendSubmission,
+  } = useDailyTasks()
 
   return (
     <main>
@@ -22,8 +28,13 @@ function Home() {
             <TaskCard
               key={task.id}
               task={task}
+              submission={submissionsByTask[task.id] ?? {
+                currentUser: null,
+                friendSubmitted: false,
+              }}
               isCompleted={completedTaskIds.includes(task.id)}
-              onComplete={completeTask}
+              onSubmitPhoto={submitCurrentUserPhoto}
+              onSimulateFriendSubmission={simulateFriendSubmission}
             />
           ))}
         </div>

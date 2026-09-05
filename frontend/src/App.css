@@ -47,3 +47,28 @@ progress {
 .task-card h3 {
   margin-top: 0;
 }
+
+.task-card dl div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.task-card dd {
+  margin: 0;
+}
+
+.task-card form,
+.task-card figure {
+  margin: 1rem 0;
+}
+
+.photo-preview {
+  display: block;
+  width: 10rem;
+  max-height: 10rem;
+  object-fit: cover;
+}
+
+.task-card button {
+  margin: 0.25rem 0.5rem 0.25rem 0;
+}
