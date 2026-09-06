@@ -111,12 +111,12 @@ export function useDailyTasks() {
 
   async function simulateFriendSubmission(task) {
     if (!context || !tree) return
-    await runRequest(async () => {
+    return runRequest(async () => {
       await submitDailyTask(task.id, {
         userId: context.friendUserId,
         photoUrl: FRIEND_PLACEHOLDER_PHOTO,
       })
-      await loadTree(tree._id, context)
+      return loadTree(tree._id, context)
     })
   }
 

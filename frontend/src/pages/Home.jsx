@@ -19,15 +19,19 @@ import FlowerBackdrop from '../components/FlowerBackdrop'
 import NewTreeForm from '../components/NewTreeForm'
 import TreeProgress from '../components/TreeProgress'
 import { useDailyTasks } from '../hooks/useDailyTasks'
+import { useRoute } from '../hooks/useRoute'
 
 const activityArtwork = [picnicScene, mealScene, placeScene, cyclingScene, paintScene]
 const galleryArtwork = [galleryTree5, galleryTree15, galleryTree20, galleryTree30]
 
+function activityRouteId(task) {
+  return String(task.taskId ?? task.id)
+}
+
 function Home() {
-  const [view, setView] = useState('garden')
-  const [isCreatingNewTree, setIsCreatingNewTree] = useState(false)
   const [activityIndex, setActivityIndex] = useState(0)
-  const [captureState, setCaptureState] = useState(null)
+  const [capturePhoto, setCapturePhoto] = useState(null)
+  const { path, navigate } = useRoute()
   const {
     hasActiveTree,
     treeProgress,
@@ -54,40 +58,76 @@ function Home() {
     : !hasActiveTree || isTreeDead
       ? 0
       : treeProgress
+  const captureMatch = path.match(/^\/activities\/([^/]+)\/capture$/)
+  const activityMatch = path.match(/^\/activities\/([^/]+)$/)
+  const routeTaskId = decodeURIComponent(captureMatch?.[1] ?? activityMatch?.[1] ?? '')
+  const routeTaskIndex = tasks.findIndex((task) => (
+    activityRouteId(task) === routeTaskId || task.id === routeTaskId
+  ))
+  const selectedActivityIndex = routeTaskIndex >= 0
+    ? routeTaskIndex
+    : Math.min(activityIndex, Math.max(tasks.length - 1, 0))
+  const captureTask = captureMatch && routeTaskIndex >= 0 ? tasks[routeTaskIndex] : null
+  const isActivitiesRoute = path === '/activities' || Boolean(activityMatch) || Boolean(captureMatch)
 
   async function handleNewTreeConfirmation(referencePhoto) {
     const createdTree = await startNewTree(referencePhoto)
     if (!createdTree) return
-    setIsCreatingNewTree(false)
-    setView('garden')
+    navigate('/', { replace: true })
   }
 
   function handleNavigate(nextView) {
-    setView(nextView)
-    if (nextView === 'gallery') loadCompletedTrees()
+    if (nextView === 'gallery') {
+      loadCompletedTrees()
+      navigate('/completed-trees')
+      return
+    }
+    if (nextView === 'activities') {
+      const task = tasks[selectedActivityIndex] ?? tasks[0]
+      if (task) navigate(`/activities/${encodeURIComponent(activityRouteId(task))}`)
+      return
+    }
+    navigate('/')
   }
 
   function handleCameraClick() {
-    setIsCreatingNewTree(true)
+    navigate('/trees/new')
   }
 
   function openActivityCapture(task, photo = null) {
     const selectedIndex = tasks.findIndex((item) => item.id === task.id)
     if (selectedIndex >= 0) setActivityIndex(selectedIndex)
-    setCaptureState({ task, photo })
+    setCapturePhoto(photo)
+    navigate(`/activities/${encodeURIComponent(activityRouteId(task))}/capture`)
   }
 
   async function handleActivitySubmit(task, photo) {
     const updatedTree = await submitCurrentUserPhoto(task, photo)
-    setCaptureState(null)
-    if (updatedTree?.status === 'completed') setView('garden')
+    setCapturePhoto(null)
+    navigate(
+      updatedTree?.status === 'completed'
+        ? '/'
+        : `/activities/${encodeURIComponent(activityRouteId(task))}`,
+      { replace: true },
+    )
+  }
+
+  async function handleFriendSubmission(task) {
+    const updatedTree = await simulateFriendSubmission(task)
+    if (updatedTree?.status === 'completed') navigate('/')
+  }
+
+  function handleActivityIndexChange(index) {
+    setActivityIndex(index)
+    const task = tasks[index]
+    if (task) navigate(`/activities/${encodeURIComponent(activityRouteId(task))}`, { replace: true })
   }
 
   if (isLoading) {
     return <main className="figma-shell loading-screen"><p>Connecting to Bloom…</p></main>
   }
 
-  if (isCreatingNewTree) {
+  if (path === '/trees/new') {
     return (
       <main className="figma-shell onboarding-page">
         <FlowerBackdrop variant="capture" />
@@ -98,15 +138,15 @@ function Home() {
     )
   }
 
-  if (captureState && !isTreeCompleted) {
-    const captureCompleted = completedTaskIds.includes(captureState.task.id)
+  if (captureTask && !isTreeCompleted) {
+    const captureCompleted = completedTaskIds.includes(captureTask.id)
     return (
       <main className="figma-shell activity-capture-page">
         <FlowerBackdrop variant="capture" />
         <ActivityCapture
-          key={captureState.task.id}
-          task={captureState.task}
-          initialPhoto={captureState.photo}
+          key={captureTask.id}
+          task={captureTask}
+          initialPhoto={capturePhoto}
           isLocked={isDailyLimitReached && !captureCompleted}
           onSubmit={handleActivitySubmit}
         />
@@ -115,7 +155,7 @@ function Home() {
     )
   }
 
-  if (view === 'activities' && !isTreeCompleted) {
+  if (isActivitiesRoute && !isTreeCompleted) {
     return (
       <main className="figma-shell activities-page">
         <FlowerBackdrop variant="activities" />
@@ -127,13 +167,13 @@ function Home() {
           completedTaskIds={completedTaskIds}
           submissionsByTask={submissionsByTask}
           isDailyLimitReached={isDailyLimitReached}
-          activeIndex={Math.min(activityIndex, Math.max(tasks.length - 1, 0))}
-          onIndexChange={setActivityIndex}
-          onBack={() => setView('garden')}
+          activeIndex={selectedActivityIndex}
+          onIndexChange={handleActivityIndexChange}
+          onBack={() => navigate('/')}
           onCapture={(task) => openActivityCapture(task)}
           onPhotoSelected={openActivityCapture}
           isDemoMode={isDemoMode}
-          onSimulateFriend={simulateFriendSubmission}
+          onSimulateFriend={handleFriendSubmission}
           onSimulateNextDay={simulateNextDay}
         />
         {error && <p className="error-note floating-error" role="alert">{error}</p>}
@@ -141,11 +181,11 @@ function Home() {
     )
   }
 
-  if (view === 'gallery') {
+  if (path === '/completed-trees') {
     return (
       <main className="figma-shell gallery-page">
         <FlowerBackdrop />
-        <button className="plain-back-button" type="button" aria-label="Back to tree" onClick={() => setView('garden')}>
+        <button className="plain-back-button" type="button" aria-label="Back to tree" onClick={() => navigate('/')}>
           <img src={backIcon} alt="" />
         </button>
         <span className="gallery-money"><img src={moneyBag} alt="" /></span>
@@ -179,7 +219,7 @@ function Home() {
         </p>
       )}
       <BottomNav
-        activeView={view}
+        activeView="garden"
         needsNewTree={needsNewTree}
         onCaptureTree={handleCameraClick}
         onNavigate={handleNavigate}
