@@ -1,27 +1,41 @@
 # Bloom
 
-Bloom is a hackathon starter for a React frontend, a FastAPI backend, and MongoDB Atlas.
-
-## Tech stack
+Bloom is a shared-growth app: create an account, then grow a tree with a friend
+by completing daily tasks.
 
 - Frontend: React 19 and Vite
 - Backend: FastAPI and Uvicorn
-- Database: MongoDB via PyMongo
-- Suggested frontend hosting: Netlify
+- Database: MongoDB Atlas (or local MongoDB) via PyMongo
 
 ## Project structure
 
 ```text
 bloom/
-├── frontend/          React application
+├── frontend/          React app and login pages
 ├── backend/app/       FastAPI application
 ├── docs/              Design and API notes
 └── README.md
 ```
 
+## Prerequisites
+
+- Python 3.12
+- Node.js 20.19+ or 22.12+
+- A MongoDB database (Atlas is fine). The app stores users, friends, trees, and tasks there.
+
 ## Local setup
 
+Clone the repo and use this branch:
+
+```bash
+git clone https://github.com/heli3939/bloom.git
+cd bloom
+git checkout login-to-tree
+```
+
 ### Backend
+
+**macOS / Linux**
 
 ```bash
 cd backend
@@ -29,27 +43,62 @@ python3 -m venv venv
 source venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload
 ```
 
-The API runs at <http://localhost:8000>. Interactive API documentation is at
-<http://localhost:8000/docs>. MongoDB is optional for the health endpoint.
+**Windows (PowerShell)**
+
+```powershell
+Set-Location backend
+py -3.12 -m venv venv
+.\venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Edit `backend/.env` before starting the API:
+
+```env
+FRONTEND_ORIGINS=http://localhost:5173
+MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DATABASE=Bloom
+JWT_SECRET=replace-with-a-long-random-string
+JWT_EXPIRE_MINUTES=10080
+```
+
+Notes:
+
+- `FRONTEND_ORIGINS` must be exactly `http://localhost:5173` with **no trailing slash**.
+- `MONGODB_DATABASE` is case-sensitive. Compass collections live in `Bloom`.
+- Do not put the Mongo URI in any frontend env file.
+- Never commit `.env`.
+
+Start the API from `backend` with the venv active:
+
+```bash
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+The API is at <http://127.0.0.1:8000>. Docs are at <http://127.0.0.1:8000/docs>.
+`GET /api/health` should return `"status": "ok"` once Mongo is reachable.
 
 ### Frontend
-
-Use Node.js 20.19+ or 22.12+.
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-The frontend runs at <http://localhost:5173> and uses Vite's API proxy.
+A `frontend/.env` is optional. Leave `VITE_API_URL` empty so Vite proxies `/api` to the backend.
 
-To work on the frontend without starting the backend or MongoDB, use the explicit
-browser-only demo mode:
+The app is at <http://localhost:5173>. Open the login page first:
+
+- Sign in: <http://localhost:5173/auth/login.html>
+- Create account: <http://localhost:5173/auth/create-account.html>
+
+Passwords must be at least 8 characters. After login or signup you are sent to the garden at `/`.
+
+To try the tree UI without Mongo or an account:
 
 ```bash
 cd frontend
@@ -63,20 +112,8 @@ npm run dev:demo
 (cd backend && python -m compileall app)
 ```
 
-Never commit `.env` files, database URLs, API keys, JWT secrets, or passwords.
-Keep `frontend` and `backend` as folders on `main`; use short-lived branches such
-as `feature/login` and merge through pull requests.
-
-## Planned features
-
-- Login
-- Friend pairing
-- Shared tree
-- Daily tasks
-- Photo upload
-- Tree growth
-
 ## AI usage
 
 This project used OpenAI Codex to scaffold the FastAPI/React monorepo, add local
-development configuration, and verify the starter build. Add further AI use here.
+development configuration, and verify the starter build. Cursor was used to
+connect login, MongoDB user storage, and the tree/task flow.
