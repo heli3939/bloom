@@ -86,6 +86,12 @@ function Home() {
     }
   }, [isLoading, needsNewTree, tasks, navigate])
 
+  useEffect(() => {
+    if (!isLoading && !error && !hasActiveTree && path !== '/trees/new') {
+      navigate('/trees/new', { replace: true })
+    }
+  }, [error, hasActiveTree, isLoading, navigate, path])
+
   async function handleNewTreeConfirmation(referencePhoto) {
     const createdTree = await startNewTree(referencePhoto)
     if (!createdTree) return

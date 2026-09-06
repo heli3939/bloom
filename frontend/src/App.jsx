@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import Home from './pages/Home'
 import { withBase } from './paths'
-import { demoModeEnabled, getStoredToken } from './services/api'
+import { getStoredToken, isDemoModeEnabled, setDemoModeEnabled } from './services/api'
 import './App.css'
 
 function subscribeToViewport(callback) {
@@ -20,10 +20,16 @@ function viewportWidth() {
 function App() {
   const width = useSyncExternalStore(subscribeToViewport, viewportWidth, () => 393)
   const mobileScale = width <= 480 ? width / 393 : 1
+  const isDemoMode = isDemoModeEnabled()
 
-  if (!demoModeEnabled && !getStoredToken()) {
+  if (!isDemoMode && !getStoredToken()) {
     window.location.replace(withBase('auth/welcome.html'))
     return null
+  }
+
+  function handleDevModeToggle() {
+    setDemoModeEnabled(!isDemoMode)
+    window.location.assign(withBase(''))
   }
 
   return (
@@ -34,6 +40,9 @@ function App() {
         '--bloom-height': `${852 * mobileScale}px`,
       }}
     >
+      <button className={`dev-mode-toggle ${isDemoMode ? 'enabled' : ''}`} type="button" onClick={handleDevModeToggle}>
+        Dev mode {isDemoMode ? 'on' : 'off'}
+      </button>
       <Home />
     </div>
   )

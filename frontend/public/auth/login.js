@@ -15,6 +15,7 @@
     fieldPw: $('fieldPw'),
     form: $('loginForm'),
     signIn: $('signInBtn'),
+    devMode: $('devModeBtn'),
     sms: $('smsBtn'),
     forgot: $('forgotBtn'),
     create: $('createLink'),
@@ -134,6 +135,11 @@
       els.signIn.disabled = false;
       els.signIn.textContent = original;
     }
+  });
+
+  els.devMode.addEventListener('click', () => {
+    setBloomDevMode(true);
+    window.location.href = '/';
   });
 
   if (els.back) {

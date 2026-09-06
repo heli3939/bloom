@@ -26,6 +26,7 @@ function ActivityCapture({ task, initialPhoto, isLocked, onSubmit }) {
   return (
     <section className="capture-screen" aria-labelledby="capture-heading">
       <h1 id="capture-heading">Capture the activity</h1>
+      <p className="capture-growth-value">{task.title} · +{task.growthValue}% growth</p>
       <input className="file-input" id="activity-photo" type="file" accept="image/*" capture="environment" onChange={handlePhotoSelection} />
       <label className="figma-capture-zone" htmlFor="activity-photo">
         {selectedPhoto && <img src={selectedPhoto.previewUrl} alt={`Selected photo for ${task.title}`} />}

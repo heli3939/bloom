@@ -7,7 +7,7 @@ import {
   getSession,
   getTree,
   submitDailyTask,
-  demoModeEnabled,
+  isDemoModeEnabled,
 } from '../services/api'
 
 const FRIEND_PLACEHOLDER_PHOTO =
@@ -159,7 +159,7 @@ export function useDailyTasks() {
     isLoading,
     error,
     completedTrees,
-    isDemoMode: demoModeEnabled,
+    isDemoMode: isDemoModeEnabled(),
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,
