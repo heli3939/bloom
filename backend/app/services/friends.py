@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 
 from bson import ObjectId
@@ -23,7 +24,9 @@ def add_friend(current_user: dict, username: str) -> dict:
     if "@" in query:
         friend = users_col().find_one({"email": query.lower()})
     else:
-        friend = users_col().find_one({"username": query})
+        friend = users_col().find_one({
+            "username": {"$regex": f"^{re.escape(query)}$", "$options": "i"}
+        })
 
     if friend is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
