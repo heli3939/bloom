@@ -18,10 +18,21 @@ def get_session(
 ) -> dict:
     catalog = seed_catalog(db)
     friends = list_friends(current_user)
-    friend_id = friends[0]["id"] if friends else str(catalog["friend"]["_id"])
+    if friends:
+        friend_id = friends[0]["id"]
+        friend_is_demo = False
+    else:
+        friend_id = str(catalog["friend"]["_id"])
+        friend_is_demo = True
 
     me_id = ObjectId(current_user["id"])
-    latest_tree = db.TREES.find_one({"userIds": me_id}, sort=[("createdAt", -1)])
+    friend_oid = ObjectId(friend_id)
+    latest_tree = db.TREES.find_one(
+        {"userIds": {"$all": [me_id, friend_oid]}, "status": "active"},
+        sort=[("createdAt", -1)],
+    )
+    if not latest_tree:
+        latest_tree = db.TREES.find_one({"userIds": me_id}, sort=[("createdAt", -1)])
     if latest_tree:
         latest_tree = expire_inactive_tree(db, latest_tree)
     active_tree_id = (
@@ -33,6 +44,7 @@ def get_session(
     return {
         "currentUserId": current_user["id"],
         "friendUserId": friend_id,
+        "friendIsDemo": friend_is_demo,
         "speciesId": str(catalog["species"]["_id"]),
         "activeTreeId": active_tree_id,
         "user": current_user,

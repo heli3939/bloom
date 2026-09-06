@@ -48,15 +48,16 @@ export function useDailyTasks() {
     return loadedTree
   }, [])
 
+  const treeId = tree?._id ?? tree?.id
+
   useEffect(() => {
-    if (!context || !tree?._id || tree.status !== 'active') return
-    const treeId = tree._id
+    if (!context || !treeId || tree.status !== 'active') return
     const session = context
     const timer = window.setInterval(() => {
       loadTree(treeId, session).catch(() => {})
     }, 4000)
     return () => window.clearInterval(timer)
-  }, [context, tree?._id, tree?.status, loadTree])
+  }, [context, treeId, tree?.status, loadTree])
 
   useEffect(() => {
     let cancelled = false
@@ -100,9 +101,10 @@ export function useDailyTasks() {
         speciesId: context.speciesId,
         referencePhotoUrl: referencePhoto.previewUrl,
       })
-      setTree(createdTree)
+      const id = createdTree._id ?? createdTree.id
+      setTree({ ...createdTree, _id: id, id })
       setPhotosByTask({})
-      setTasks(await getDailyTasks(createdTree._id))
+      setTasks(await getDailyTasks(id))
       return createdTree
     })
   }
@@ -115,7 +117,7 @@ export function useDailyTasks() {
         photoUrl: photo.previewUrl,
       })
       setPhotosByTask((current) => ({ ...current, [task.id]: photo }))
-      return loadTree(tree._id, context)
+      return loadTree(tree._id ?? tree.id, context)
     })
   }
 
@@ -126,7 +128,7 @@ export function useDailyTasks() {
         userId: context.friendUserId,
         photoUrl: FRIEND_PLACEHOLDER_PHOTO,
       })
-      return loadTree(tree._id, context)
+      return loadTree(tree._id ?? tree.id, context)
     })
   }
 
@@ -134,7 +136,7 @@ export function useDailyTasks() {
     await runRequest(async () => {
       await advanceDemoDay()
       setPhotosByTask({})
-      await loadTree(tree._id, context)
+      await loadTree(tree._id ?? tree.id, context)
     })
   }
 
@@ -170,6 +172,7 @@ export function useDailyTasks() {
     error,
     completedTrees,
     isDemoMode: isDemoModeEnabled(),
+    canSimulateFriend: isDemoModeEnabled() || Boolean(context?.friendIsDemo),
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,

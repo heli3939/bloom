@@ -16,6 +16,7 @@ function ActivitySelector({
   onCapture,
   onPhotoSelected,
   isDemoMode,
+  canSimulateFriend,
   onSimulateFriend,
   onSimulateNextDay,
 }) {
@@ -108,11 +109,16 @@ function ActivitySelector({
       <button className="figma-next-button" type="button" disabled={isLocked || Boolean(submission.currentUser)} onClick={() => onCapture(task)}>
         {isLocked ? '3/3 DONE' : submission.currentUser ? 'SUBMITTED' : 'SELECT'}
       </button>
+      {submission.currentUser && !isCompleted && (
+        <p className="activity-waiting">Waiting for your bestie to submit this activity</p>
+      )}
       {isDailyLimitReached && <p className="figma-limit-message">You can complete at most 3 tasks a day.</p>}
-      {isDemoMode && (
+      {(isDemoMode || canSimulateFriend) && (
         <div className="demo-controls">
-          <button type="button" onClick={() => onSimulateFriend(task)} disabled={submission.friendSubmitted || isLocked}>Friend</button>
-          <button type="button" onClick={onSimulateNextDay}>Next day</button>
+          {canSimulateFriend && (
+            <button type="button" onClick={() => onSimulateFriend(task)} disabled={submission.friendSubmitted || isLocked}>Friend</button>
+          )}
+          {isDemoMode && <button type="button" onClick={onSimulateNextDay}>Next day</button>}
         </div>
       )}
     </section>

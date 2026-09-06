@@ -69,7 +69,10 @@ export function createTree({ userIds, speciesId, referencePhotoUrl }) {
 
 export function getTree(treeId) {
   if (isDemoModeEnabled()) return mockApi.getTree(treeId)
-  return request(`/api/trees/${treeId}`)
+  return request(`/api/trees/${treeId}`).then((tree) => {
+    const id = tree._id ?? tree.id
+    return { ...tree, _id: id, id }
+  })
 }
 
 export function getCompletedTrees(userId, friendId) {
@@ -81,7 +84,10 @@ export function getCompletedTrees(userId, friendId) {
 export async function getDailyTasks(treeId) {
   if (isDemoModeEnabled()) return mockApi.getDailyTasks(treeId)
   const tasks = await request(`/api/trees/${treeId}/daily-tasks`)
-  return tasks.map((task) => ({ ...task, id: task._id }))
+  return tasks.map((task) => {
+    const id = task._id ?? task.id
+    return { ...task, _id: id, id }
+  })
 }
 
 export function submitDailyTask(dailyTaskId, { userId, photoUrl }) {

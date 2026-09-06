@@ -43,6 +43,7 @@ function Home() {
     isLoading,
     error,
     isDemoMode,
+    canSimulateFriend,
     simulateNextDay,
     completedTrees,
     loadCompletedTrees,
@@ -199,6 +200,7 @@ function Home() {
           onCapture={(task) => openActivityCapture(task)}
           onPhotoSelected={openActivityCapture}
           isDemoMode={isDemoMode}
+          canSimulateFriend={canSimulateFriend}
           onSimulateFriend={handleFriendSubmission}
           onSimulateNextDay={simulateNextDay}
         />
