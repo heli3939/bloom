@@ -243,6 +243,23 @@ progress::-moz-progress-bar { border-radius: 50px; background: var(--pale); }
 .figma-limit-message { position: absolute; left: 70px; top: 687px; width: 270px; margin: 0; color: #8b4b43; font-family: system-ui, sans-serif; font-size: 11px; font-weight: 700; text-align: center; }
 .demo-controls { position: absolute; left: 106px; top: 784px; display: flex; width: 199px; justify-content: center; gap: 8px; }
 .demo-controls button { min-height: 28px; padding: 3px 10px; border: 1px solid var(--green); border-radius: 50px; color: var(--green); background: rgba(255,255,255,.72); font-family: system-ui, sans-serif; font-size: 10px; font-weight: 700; }
+.dev-mode-toggle {
+  position: absolute;
+  z-index: 20;
+  top: 14px;
+  right: 14px;
+  padding: 6px 10px;
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  color: var(--green);
+  background: rgba(255, 255, 255, .88);
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.dev-mode-toggle.enabled { color: var(--white); background: var(--green); }
 
 .capture-screen, .new-tree-screen { inset: 0; }
 .capture-screen h1, .new-tree-screen h1 {

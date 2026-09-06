@@ -435,3 +435,15 @@ body {
     font-size: 22px;
   }
 }
+.dev-mode-entry {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: 1px solid #536b45;
+  border-radius: 999px;
+  color: #536b45;
+  background: rgba(255, 255, 255, .72);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

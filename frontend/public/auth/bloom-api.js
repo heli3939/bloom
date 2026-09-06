@@ -1,4 +1,9 @@
 const TOKEN_KEY = 'bloom_token'
+const DEV_MODE_KEY = 'bloom_dev_mode'
+
+function setBloomDevMode(enabled) {
+  localStorage.setItem(DEV_MODE_KEY, String(enabled))
+}
 
 function saveSession(data) {
   if (data && data.access_token) {
