@@ -11,7 +11,7 @@ DEFAULT_TASKS = [
         "title": "Phone-free hangout",
         "description": "Spend some uninterrupted time together without your phones.",
         "category": "together",
-        "growthValue": 100,
+        "growthValue": 10,
     },
     {
         "title": "Take a walk together",
@@ -45,3 +45,9 @@ def seed_catalog() -> None:
         species_col().insert_one(DEFAULT_SPECIES)
     if tasks_col().count_documents({}) == 0:
         tasks_col().insert_many(DEFAULT_TASKS)
+        return
+    for task in DEFAULT_TASKS:
+        tasks_col().update_one(
+            {"title": task["title"]},
+            {"$set": {"growthValue": task["growthValue"]}},
+        )
