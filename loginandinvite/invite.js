@@ -47,11 +47,11 @@
   async function loadMyId() {
     try {
       const me = await bloomRequest('/api/auth/me');
-      els.myId.textContent = me.username || me.gardenCode || '???';
+      els.myId.textContent = me.gardenCode || 'BLM???';
       const data = await bloomRequest('/api/friends');
       if (data.friends && data.friends[0]) showBestie(data.friends[0]);
     } catch (err) {
-      els.myId.textContent = '???';
+      els.myId.textContent = 'BLM???';
       if (/not authenticated|invalid or expired/i.test(err.message)) {
         window.location.replace('login.html');
       }
@@ -90,7 +90,7 @@
     const code = els.friendId.value.trim();
     if (!code) {
       els.idWrap.classList.add('error');
-      return toast("Enter your friend's username first", 'error');
+      return toast("Enter your friend's Garden ID first", 'error');
     }
     if (code.toUpperCase() === els.myId.textContent.trim().toUpperCase()) {
       els.idWrap.classList.add('error');
