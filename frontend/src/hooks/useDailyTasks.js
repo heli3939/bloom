@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   advanceDemoDay,
-  bootstrapDemo,
   createTree,
   getDailyTasks,
   getCompletedTrees,
+  getSession,
   getTree,
   submitDailyTask,
   demoModeEnabled,
@@ -53,7 +53,7 @@ export function useDailyTasks() {
 
     async function initialise() {
       try {
-        const demoContext = await bootstrapDemo()
+        const demoContext = await getSession()
         if (cancelled) return
         setContext(demoContext)
         if (demoContext.activeTreeId) {

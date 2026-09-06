@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import Home from './pages/Home'
+import { demoModeEnabled, getStoredToken } from './services/api'
 import './App.css'
 
 function subscribeToViewport(callback) {
@@ -18,6 +19,11 @@ function viewportWidth() {
 function App() {
   const width = useSyncExternalStore(subscribeToViewport, viewportWidth, () => 393)
   const mobileScale = width <= 480 ? width / 393 : 1
+
+  if (!demoModeEnabled && !getStoredToken()) {
+    window.location.replace('/auth/login.html')
+    return null
+  }
 
   return (
     <div

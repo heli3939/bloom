@@ -2,7 +2,17 @@ import * as mockApi from './mockApi'
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? ''
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+const TOKEN_KEY = 'bloom_token'
 export const demoModeEnabled = DEMO_MODE
+
+export function getStoredToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+function authHeaders() {
+  const token = getStoredToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 export async function getHealth() {
   return request('/api/health')
@@ -11,13 +21,27 @@ export async function getHealth() {
 async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+      ...options.headers,
+    },
   })
+  if (response.status === 401 && !DEMO_MODE) {
+    localStorage.removeItem(TOKEN_KEY)
+    window.location.replace('/auth/login.html')
+    throw new Error('Please log in')
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     throw new Error(body?.detail ?? `API request failed with status ${response.status}`)
   }
   return response.json()
+}
+
+export function getSession() {
+  if (DEMO_MODE) return mockApi.bootstrapDemo()
+  return request('/api/session')
 }
 
 export function bootstrapDemo() {
