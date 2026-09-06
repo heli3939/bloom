@@ -13,7 +13,7 @@
         toast: $('toast'),
     };
 
-    const STORAGE = { TOKEN: 'bloom.token' };
+    const STORAGE = { TOKEN: 'bloom_token' };
 
     // ----- Home button -----
     els.home.addEventListener('click', () => {
@@ -46,7 +46,7 @@
                 return;
             }
             const me = await resp.json();
-            els.myId.textContent = me.gardenCode || 'BLM???';
+            els.myId.textContent = me.username || 'unknown';
         } catch {
             els.myId.textContent = 'BLM???';
         }
@@ -57,7 +57,7 @@
         try {
             const text = await navigator.clipboard.readText();
             if (!text) return toast('Clipboard is empty', 'error');
-            els.friendId.value = text.trim().toUpperCase();
+            els.friendId.value = text.trim();
             els.idWrap.classList.remove('error');
             toast('Friend code pasted ✨');
         } catch {
@@ -85,14 +85,10 @@
 
     // ----- Bind Our Sprout Together -----
     els.bindBtn.addEventListener('click', async () => {
-        const code = els.friendId.value.trim().toUpperCase();
+        const code = els.friendId.value.trim();
         if (!code) {
             els.idWrap.classList.add('error');
-            return toast("Enter your friend's Garden Code first", 'error');
-        }
-        if (!/^BLM\d{3,}$/.test(code)) {
-            els.idWrap.classList.add('error');
-            return toast('Code should look like BLM001', 'error');
+            return toast("Enter your friend's username first", 'error');
         }
         if (code === els.myId.textContent.trim()) {
             els.idWrap.classList.add('error');
@@ -115,7 +111,7 @@
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ gardenCode: code }),
+                body: JSON.stringify({ username: code }),
             });
 
             if (resp.status === 401) {
