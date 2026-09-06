@@ -1,110 +1,58 @@
 import { useState } from 'react'
 
-function TaskCard({
-  task,
-  submission,
-  isCompleted,
-  isDailyLimitReached,
-  canSimulateFriend,
-  onSubmitPhoto,
-  onSimulateFriendSubmission,
-}) {
+function TaskCard({ task, artwork, submission, isCompleted, isDailyLimitReached, canSimulateFriend, onSubmitPhoto, onSimulateFriendSubmission }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null)
   const submittedPhoto = submission.currentUser
   const previewPhoto = submittedPhoto ?? selectedPhoto
-  const isLockedByDailyLimit = isDailyLimitReached && !isCompleted
+  const isLocked = isDailyLimitReached && !isCompleted
 
   function handlePhotoSelection(event) {
     const file = event.target.files?.[0]
-    if (!file) {
-      setSelectedPhoto(null)
-      return
-    }
-
+    if (!file) return setSelectedPhoto(null)
     const reader = new FileReader()
-    reader.onload = () => {
-      setSelectedPhoto({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        previewUrl: reader.result,
-      })
-    }
+    reader.onload = () => setSelectedPhoto({ name: file.name, type: file.type, size: file.size, previewUrl: reader.result })
     reader.readAsDataURL(file)
   }
 
   function handlePhotoSubmit(event) {
     event.preventDefault()
-    if (!selectedPhoto || submittedPhoto) return
-    onSubmitPhoto(task, selectedPhoto)
+    if (selectedPhoto && !submittedPhoto && !isLocked) onSubmitPhoto(task, selectedPhoto)
   }
 
   return (
-    <article className="task-card">
-      <h3>{task.title}</h3>
-      <p>{task.description}</p>
-      <p>Tree growth after both submissions: +{task.growthValue}%</p>
-
-      <dl>
-        <div>
-          <dt>Current user</dt>
-          <dd>{submittedPhoto ? 'Submitted' : 'Waiting'}</dd>
-        </div>
-        <div>
-          <dt>Friend</dt>
-          <dd>{submission.friendSubmitted ? 'Submitted' : 'Waiting'}</dd>
-        </div>
-      </dl>
-
+    <article className={`task-card ${isCompleted ? 'completed' : ''}`}>
+      <div className="task-heading">
+        <div><p className="eyebrow">Shared activity</p><h3>{task.title}</h3></div>
+        <span className="growth-chip">+{task.growthValue}%</span>
+      </div>
       <form onSubmit={handlePhotoSubmit}>
-        <label htmlFor={`photo-${task.id}`}>Choose one photo</label>{' '}
-        <input
-          id={`photo-${task.id}`}
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoSelection}
-          disabled={Boolean(submittedPhoto) || isLockedByDailyLimit}
-        />
-
-        {previewPhoto?.previewUrl && (
-          <figure>
-            <img
-              className="photo-preview"
-              src={previewPhoto.previewUrl}
-              alt={`Preview for ${task.title}`}
-            />
-            <figcaption>{previewPhoto.name}</figcaption>
-          </figure>
-        )}
-
-        <button
-          type="submit"
-          disabled={!selectedPhoto || Boolean(submittedPhoto) || isLockedByDailyLimit}
-        >
-          {isLockedByDailyLimit
-            ? 'Daily limit reached'
-            : submittedPhoto
-              ? 'Photo submitted'
-              : 'Submit my photo'}
+        <input className="file-input" id={`photo-${task.id}`} type="file" accept="image/*" onChange={handlePhotoSelection} disabled={Boolean(submittedPhoto) || isLocked} />
+        <label className="task-upload" htmlFor={`photo-${task.id}`}>
+          {previewPhoto?.previewUrl ? (
+            <figure><img className="photo-preview" src={previewPhoto.previewUrl} alt={`Preview for ${task.title}`} /><figcaption>{previewPhoto.name}</figcaption></figure>
+          ) : (
+            <figure>
+              <img className="activity-art" src={artwork} alt="" />
+              <figcaption>{submittedPhoto ? 'Photo submitted' : 'Tap the image to upload your photo'}</figcaption>
+            </figure>
+          )}
+        </label>
+        <p className="task-description">{task.description}</p>
+        <dl className="submission-status">
+          <div><dt>You</dt><dd>{submittedPhoto ? 'Submitted' : 'Waiting'}</dd></div>
+          <div><dt>Friend</dt><dd>{submission.friendSubmitted ? 'Submitted' : 'Waiting'}</dd></div>
+        </dl>
+        <button className="primary-button task-submit" type="submit" disabled={!selectedPhoto || Boolean(submittedPhoto) || isLocked}>
+          {isLocked ? 'Daily limit reached' : submittedPhoto ? 'Photo submitted' : 'Submit my photo'}
         </button>
       </form>
-
       {canSimulateFriend && (
-        <button
-          type="button"
-          onClick={() => onSimulateFriendSubmission(task)}
-          disabled={submission.friendSubmitted || isLockedByDailyLimit}
-        >
-          {isLockedByDailyLimit
-            ? 'Daily limit reached'
-            : submission.friendSubmitted
-              ? 'Friend submission simulated'
-              : 'Development only: Simulate friend submission'}
+        <button className="secondary-button" type="button" onClick={() => onSimulateFriendSubmission(task)} disabled={submission.friendSubmitted || isLocked}>
+          {isLocked ? 'Daily limit reached' : submission.friendSubmitted ? 'Friend submission simulated' : 'Simulate friend submission'}
         </button>
       )}
-
-      {isCompleted && <p><strong>Task completed by both users.</strong></p>}
-      {isLockedByDailyLimit && <p>This task cannot be submitted today.</p>}
+      {isCompleted && <p className="success-note"><strong>Task completed by both gardeners!</strong></p>}
+      {isLocked && <p className="locked-note">This task cannot be submitted today.</p>}
     </article>
   )
 }

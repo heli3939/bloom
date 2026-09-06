@@ -38,6 +38,12 @@ export function getTree(treeId) {
   return request(`/api/trees/${treeId}`)
 }
 
+export function getCompletedTrees(userId, friendId) {
+  if (DEMO_MODE) return mockApi.getCompletedTrees()
+  const query = new URLSearchParams({ userId, friendId })
+  return request(`/api/trees?${query}`)
+}
+
 export async function getDailyTasks(treeId) {
   if (DEMO_MODE) return mockApi.getDailyTasks(treeId)
   const tasks = await request(`/api/trees/${treeId}/daily-tasks`)

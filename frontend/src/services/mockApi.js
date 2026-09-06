@@ -11,7 +11,7 @@ function readState() {
   const saved = localStorage.getItem(STORAGE_KEY)
   return saved
     ? JSON.parse(saved)
-    : { tree: null, date: null, dayOffset: 0, tasks: [], submissions: {} }
+    : { tree: null, completedTrees: [], date: null, dayOffset: 0, tasks: [], submissions: {} }
 }
 
 function writeState(state) {
@@ -45,7 +45,16 @@ function expireInactiveTree(state) {
 function ensureDailyTasks(state) {
   state = expireInactiveTree(state)
   const demoDate = currentDemoDate(state)
-  if (state.date === demoDate && state.tasks.length === 5) return state
+  if (state.date === demoDate && state.tasks.length === 5) {
+    state.tasks = state.tasks.map((task, index) => ({
+      ...task,
+      ...mockTasks[index],
+      _id: task._id,
+      treeId: task.treeId,
+      taskId: mockTasks[index].id,
+    }))
+    return state
+  }
   const taskDate = `${demoDate}T00:00:00.000Z`
   return {
     ...state,
@@ -70,6 +79,7 @@ export async function bootstrapDemo() {
 }
 
 export async function createTree({ userIds, speciesId }) {
+  const previousState = readState()
   const now = new Date().toISOString()
   const tree = {
     _id: crypto.randomUUID(),
@@ -82,7 +92,14 @@ export async function createTree({ userIds, speciesId }) {
     createdAt: now,
     completedAt: null,
   }
-  writeState({ tree, date: null, dayOffset: 0, tasks: [], submissions: {} })
+  const completedTrees = previousState.completedTrees ?? []
+  if (
+    previousState.tree?.status === 'completed' &&
+    !completedTrees.some((item) => item._id === previousState.tree._id)
+  ) {
+    completedTrees.push(previousState.tree)
+  }
+  writeState({ tree, completedTrees, date: null, dayOffset: 0, tasks: [], submissions: {} })
   return tree
 }
 
@@ -149,4 +166,13 @@ export async function advanceDemoDay() {
   state = ensureDailyTasks(state)
   writeState(state)
   return state.tasks.map((task) => ({ ...task, id: task._id }))
+}
+
+export async function getCompletedTrees() {
+  const state = readState()
+  const trees = [...(state.completedTrees ?? [])]
+  if (state.tree?.status === 'completed' && !trees.some((item) => item._id === state.tree._id)) {
+    trees.unshift(state.tree)
+  }
+  return trees
 }

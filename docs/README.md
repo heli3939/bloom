@@ -6,6 +6,7 @@ The live OpenAPI documentation is available at `http://localhost:8000/docs`.
 ## Tree and daily-task API
 
 - `POST /api/trees` creates a shared tree for two existing users.
+- `GET /api/trees?userId={id}&friendId={id}` returns completed trees for the pair.
 - `GET /api/trees/{treeId}` returns the tree and its growth.
 - `GET /api/trees/{treeId}/daily-tasks` returns the five tasks selected for today.
 - `POST /api/tasks/daily/{dailyTaskId}/submissions` records a user's photo URL.

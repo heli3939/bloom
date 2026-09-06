@@ -4,6 +4,7 @@ import {
   bootstrapDemo,
   createTree,
   getDailyTasks,
+  getCompletedTrees,
   getTree,
   submitDailyTask,
   demoModeEnabled,
@@ -28,6 +29,7 @@ export function useDailyTasks() {
   const [photosByTask, setPhotosByTask] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [completedTrees, setCompletedTrees] = useState([])
 
   const loadTree = useCallback(async (treeId, demoContext) => {
     const loadedTree = await getTree(treeId)
@@ -43,6 +45,7 @@ export function useDailyTasks() {
       }
       return restored
     })
+    return loadedTree
   }, [])
 
   useEffect(() => {
@@ -72,15 +75,16 @@ export function useDailyTasks() {
   async function runRequest(action) {
     setError('')
     try {
-      await action()
+      return await action()
     } catch (requestError) {
       setError(requestError.message)
+      return undefined
     }
   }
 
   async function startNewTree(referencePhoto) {
     if (!context) return
-    await runRequest(async () => {
+    return runRequest(async () => {
       const createdTree = await createTree({
         userIds: [context.currentUserId, context.friendUserId],
         speciesId: context.speciesId,
@@ -89,18 +93,19 @@ export function useDailyTasks() {
       setTree(createdTree)
       setPhotosByTask({})
       setTasks(await getDailyTasks(createdTree._id))
+      return createdTree
     })
   }
 
   async function submitCurrentUserPhoto(task, photo) {
     if (!context || !tree) return
-    await runRequest(async () => {
+    return runRequest(async () => {
       await submitDailyTask(task.id, {
         userId: context.currentUserId,
         photoUrl: photo.previewUrl,
       })
       setPhotosByTask((current) => ({ ...current, [task.id]: photo }))
-      await loadTree(tree._id, context)
+      return loadTree(tree._id, context)
     })
   }
 
@@ -120,6 +125,13 @@ export function useDailyTasks() {
       await advanceDemoDay()
       setPhotosByTask({})
       await loadTree(tree._id, context)
+    })
+  }
+
+  async function loadCompletedTrees() {
+    if (!context) return
+    await runRequest(async () => {
+      setCompletedTrees(await getCompletedTrees(context.currentUserId, context.friendUserId))
     })
   }
 
@@ -146,10 +158,12 @@ export function useDailyTasks() {
     dayNumber: calendarDayNumber(tree, tasks),
     isLoading,
     error,
+    completedTrees,
     isDemoMode: demoModeEnabled,
     submitCurrentUserPhoto,
     simulateFriendSubmission,
     startNewTree,
     simulateNextDay,
+    loadCompletedTrees,
   }
 }

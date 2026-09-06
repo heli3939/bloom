@@ -1,11 +1,33 @@
 import { useState } from 'react'
+import backIcon from '../assets/figma/back.svg'
+import bloomLogo from '../assets/figma/bloom-logo.svg'
+import completionGarden from '../assets/figma/completion-garden.png'
+import cyclingScene from '../assets/figma/cycling-1.png'
+import galleryTree15 from '../assets/figma/gallery-tree-15.svg'
+import galleryTree20 from '../assets/figma/gallery-tree-20.svg'
+import galleryTree30 from '../assets/figma/gallery-tree-30.svg'
+import galleryTree5 from '../assets/figma/gallery-tree-5.svg'
+import mealScene from '../assets/figma/meal-1.png'
+import moneyBag from '../assets/figma/money-bag.svg'
+import paintScene from '../assets/figma/paint-1.png'
+import picnicScene from '../assets/figma/picnic.png'
+import placeScene from '../assets/figma/place-1.png'
+import ActivityCapture from '../components/ActivityCapture'
+import ActivitySelector from '../components/ActivitySelector'
+import BottomNav from '../components/BottomNav'
+import FlowerBackdrop from '../components/FlowerBackdrop'
 import NewTreeForm from '../components/NewTreeForm'
-import TaskCard from '../components/TaskCard'
 import TreeProgress from '../components/TreeProgress'
 import { useDailyTasks } from '../hooks/useDailyTasks'
 
+const activityArtwork = [picnicScene, mealScene, placeScene, cyclingScene, paintScene]
+const galleryArtwork = [galleryTree5, galleryTree15, galleryTree20, galleryTree30]
+
 function Home() {
+  const [view, setView] = useState('garden')
   const [isCreatingNewTree, setIsCreatingNewTree] = useState(false)
+  const [activityIndex, setActivityIndex] = useState(0)
+  const [captureState, setCaptureState] = useState(null)
   const {
     hasActiveTree,
     treeProgress,
@@ -22,105 +44,147 @@ function Home() {
     error,
     isDemoMode,
     simulateNextDay,
+    completedTrees,
+    loadCompletedTrees,
   } = useDailyTasks()
-  const completedToday = completedTaskIds.length
-  const isDailyLimitReached = completedToday >= 3
+  const isDailyLimitReached = completedTaskIds.length >= 3
+  const needsNewTree = !hasActiveTree || isTreeCompleted || isTreeDead
+  const displayedProgress = isTreeCompleted
+    ? 100
+    : !hasActiveTree || isTreeDead
+      ? 0
+      : treeProgress
 
-  function handleNewTreeConfirmation(referencePhoto) {
-    startNewTree(referencePhoto)
+  async function handleNewTreeConfirmation(referencePhoto) {
+    const createdTree = await startNewTree(referencePhoto)
+    if (!createdTree) return
     setIsCreatingNewTree(false)
+    setView('garden')
+  }
+
+  function handleNavigate(nextView) {
+    setView(nextView)
+    if (nextView === 'gallery') loadCompletedTrees()
+  }
+
+  function handleCameraClick() {
+    setIsCreatingNewTree(true)
+  }
+
+  function openActivityCapture(task, photo = null) {
+    const selectedIndex = tasks.findIndex((item) => item.id === task.id)
+    if (selectedIndex >= 0) setActivityIndex(selectedIndex)
+    setCaptureState({ task, photo })
+  }
+
+  async function handleActivitySubmit(task, photo) {
+    const updatedTree = await submitCurrentUserPhoto(task, photo)
+    setCaptureState(null)
+    if (updatedTree?.status === 'completed') setView('garden')
   }
 
   if (isLoading) {
-    return <main><p>Connecting to Bloom API…</p></main>
+    return <main className="figma-shell loading-screen"><p>Connecting to Bloom…</p></main>
   }
 
-  if (!hasActiveTree) {
+  if (isCreatingNewTree) {
     return (
-      <main>
-        <header>
-          <h1>Bloom</h1>
-          <p>You and your friend are connected. Start your first shared tree.</p>
-        </header>
-        {error && <p role="alert">{error}</p>}
+      <main className="figma-shell onboarding-page">
+        <FlowerBackdrop variant="capture" />
+        {isTreeDead && <p className="tree-dead-note">Your tree was inactive for 15 days. Plant a new one to begin again.</p>}
+        {error && <p className="error-note" role="alert">{error}</p>}
         <NewTreeForm onConfirm={handleNewTreeConfirmation} />
       </main>
     )
   }
 
-  if (isTreeDead) {
+  if (captureState && !isTreeCompleted) {
+    const captureCompleted = completedTaskIds.includes(captureState.task.id)
     return (
-      <main>
-        <header>
-          <h1>Bloom</h1>
-        </header>
-        <section aria-labelledby="tree-dead-heading">
-          <h2 id="tree-dead-heading">Your tree has died</h2>
-          <p>No shared tasks were completed for 15 days.</p>
-          <p>Plant a new tree together and begin again from 0%.</p>
-          {error && <p role="alert">{error}</p>}
-          <NewTreeForm onConfirm={handleNewTreeConfirmation} />
-        </section>
+      <main className="figma-shell activity-capture-page">
+        <FlowerBackdrop variant="capture" />
+        <ActivityCapture
+          key={captureState.task.id}
+          task={captureState.task}
+          initialPhoto={captureState.photo}
+          isLocked={isDailyLimitReached && !captureCompleted}
+          onSubmit={handleActivitySubmit}
+        />
+        {error && <p className="error-note floating-error" role="alert">{error}</p>}
+      </main>
+    )
+  }
+
+  if (view === 'activities' && !isTreeCompleted) {
+    return (
+      <main className="figma-shell activities-page">
+        <FlowerBackdrop variant="activities" />
+        <ActivitySelector
+          tasks={tasks}
+          artwork={activityArtwork}
+          progress={treeProgress}
+          dayNumber={dayNumber}
+          completedTaskIds={completedTaskIds}
+          submissionsByTask={submissionsByTask}
+          isDailyLimitReached={isDailyLimitReached}
+          activeIndex={Math.min(activityIndex, Math.max(tasks.length - 1, 0))}
+          onIndexChange={setActivityIndex}
+          onBack={() => setView('garden')}
+          onCapture={(task) => openActivityCapture(task)}
+          onPhotoSelected={openActivityCapture}
+          isDemoMode={isDemoMode}
+          onSimulateFriend={simulateFriendSubmission}
+          onSimulateNextDay={simulateNextDay}
+        />
+        {error && <p className="error-note floating-error" role="alert">{error}</p>}
+      </main>
+    )
+  }
+
+  if (view === 'gallery') {
+    return (
+      <main className="figma-shell gallery-page">
+        <FlowerBackdrop />
+        <button className="plain-back-button" type="button" aria-label="Back to tree" onClick={() => setView('garden')}>
+          <img src={backIcon} alt="" />
+        </button>
+        <span className="gallery-money"><img src={moneyBag} alt="" /></span>
+        <h1>Good Job!</h1>
+        <div className="completion-art">
+          <img src={completionGarden} alt="The garden of trees planted with your friend" />
+        </div>
+        <div className="completed-tree-strip" aria-label="Completed trees">
+          {completedTrees.length ? completedTrees.map((tree, index) => (
+            <article key={tree._id}>
+              <img src={galleryArtwork[index % galleryArtwork.length]} alt="" />
+              <span>Tree {index + 1}</span>
+            </article>
+          )) : (
+            <p>Your completed trees will grow here.</p>
+          )}
+        </div>
+        {error && <p className="error-note floating-error" role="alert">{error}</p>}
       </main>
     )
   }
 
   return (
-    <main>
-      <header>
-        <h1>Bloom</h1>
-        <p>Complete today&apos;s activities to help your tree grow.</p>
-      </header>
-
-      <TreeProgress progress={treeProgress} />
-      {error && <p role="alert">{error}</p>}
-
-      {isTreeCompleted ? (
-        <section aria-labelledby="tree-complete-heading">
-          <h2 id="tree-complete-heading">Your tree has fully bloomed!</h2>
-          <p>You and your friend completed this tree together.</p>
-          {isCreatingNewTree ? (
-            <NewTreeForm onConfirm={handleNewTreeConfirmation} />
-          ) : (
-            <button type="button" onClick={() => setIsCreatingNewTree(true)}>
-              Start a new tree
-            </button>
-          )}
-        </section>
-      ) : (
-        <section aria-labelledby="daily-tasks-heading">
-          <h2 id="daily-tasks-heading">Today&apos;s tasks — Day {dayNumber}</h2>
-          <p><strong>{completedToday}/3 completed</strong></p>
-          <p>You and your friend can complete at most three shared tasks each day.</p>
-          {isDailyLimitReached && (
-            <p role="status">
-              Today&apos;s task limit has been reached. Come back tomorrow for five fresh tasks.
-            </p>
-          )}
-          {isDemoMode && (
-            <button type="button" onClick={simulateNextDay}>
-              Simulate next day
-            </button>
-          )}
-          <div className="task-list">
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                submission={submissionsByTask[task.id] ?? {
-                  currentUser: null,
-                  friendSubmitted: false,
-                }}
-                isCompleted={completedTaskIds.includes(task.id)}
-                isDailyLimitReached={isDailyLimitReached}
-                canSimulateFriend={isDemoMode}
-                onSubmitPhoto={submitCurrentUserPhoto}
-                onSimulateFriendSubmission={simulateFriendSubmission}
-              />
-            ))}
-          </div>
-        </section>
+    <main className="figma-shell garden-page">
+      <FlowerBackdrop />
+      <img className="bloom-logo" src={bloomLogo} alt="Bloom" />
+      <TreeProgress progress={displayedProgress} />
+      {isTreeCompleted && (
+        <p className="completed-tree-prompt" role="status">
+          Your tree bloomed! Tap the camera to plant a new tree.
+        </p>
       )}
+      <BottomNav
+        activeView={view}
+        needsNewTree={needsNewTree}
+        onCaptureTree={handleCameraClick}
+        onNavigate={handleNavigate}
+      />
+      {error && <p className="error-note floating-error" role="alert">{error}</p>}
     </main>
   )
 }

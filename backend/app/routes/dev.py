@@ -9,11 +9,11 @@ from app.database import get_database
 router = APIRouter(prefix="/dev", tags=["development"])
 
 DEMO_TASKS = [
-    ("Phone-free hangout", "Spend some uninterrupted time together without your phones.", 10),
-    ("Take a walk together", "Go outside and take a short walk together.", 10),
-    ("Share a snack or drink", "Choose something simple and enjoy it together.", 5),
-    ("Find something beautiful together", "Notice and share something beautiful around you.", 5),
-    ("Share a favourite song", "Play a song you love and explain why you chose it.", 10),
+    ("Go for a picnic", "Pack something simple and spend time together outdoors.", 10),
+    ("Grab a meal together", "Share breakfast, lunch, or dinner together.", 10),
+    ("Visit a new place", "Explore somewhere neither of you has visited before.", 5),
+    ("Go for cycling", "Take your bikes out and enjoy a ride together.", 5),
+    ("Paint and sip", "Make something colourful while sharing a drink.", 10),
 ]
 
 

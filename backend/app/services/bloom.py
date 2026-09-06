@@ -88,6 +88,19 @@ def get_tree(db: Database, tree_id: str) -> Dict[str, Any]:
     return serialize_tree(tree)
 
 
+def get_completed_trees(
+    db: Database, first_user_id: str, second_user_id: str
+) -> List[Dict[str, Any]]:
+    user_ids = [
+        object_id(first_user_id, "userId"),
+        object_id(second_user_id, "friendId"),
+    ]
+    trees = db.TREES.find(
+        {"userIds": {"$all": user_ids}, "status": "completed"}
+    ).sort("completedAt", -1)
+    return [serialize_tree(tree) for tree in trees]
+
+
 def get_or_create_daily_tasks(
     db: Database, tree_id: str, task_day: date
 ) -> List[Dict[str, Any]]:
