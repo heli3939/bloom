@@ -57,7 +57,7 @@ button { color: inherit; }
 .bloom-logo { left: 21px; top: 55px; width: 352px; height: 67px; object-fit: fill; }
 .garden-panel { inset: 0; }
 .progress-copy { position: absolute; left: 102px; top: 141px; width: 67px; height: 29px; }
-.progress-copy strong { color: #000; font-size: 24px; font-weight: 400; line-height: normal; }
+.progress-copy strong { color: #47642a; font-size: 24px; font-weight: 400; line-height: normal; }
 .garden-panel progress, .activity-selector progress {
   position: absolute;
   overflow: hidden;
@@ -126,8 +126,8 @@ progress::-moz-progress-bar { border-radius: 50px; background: var(--pale); }
 }
 .bottom-nav button:nth-child(1) { left: 24px; top: 768px; width: 43px; height: 43px; }
 .bottom-nav .nav-fence { left: 91px; top: 767px; width: 40px; height: 40px; }
-.bottom-nav .nav-people { left: 273px; top: 771px; width: 33px; height: 33px; }
-.bottom-nav button:nth-child(5) { left: 331px; top: 768px; width: 37px; height: 37px; }
+.bottom-nav .nav-activities { left: 264px; top: 765px; width: 44px; height: 44px; }
+.bottom-nav .nav-people { left: 336px; top: 770px; width: 33px; height: 33px; }
 .bottom-nav .camera-button {
   left: 151px;
   top: 744px;
@@ -273,21 +273,7 @@ progress::-moz-progress-bar { border-radius: 50px; background: var(--pale); }
 .gallery-page h1 { left: 141px; top: 211px; margin: 0; font-size: 24px; font-weight: 400; }
 .completion-art { left: -30px; top: 360px; width: 453px; height: 248px; overflow: hidden; }
 .completion-art img { position: absolute; left: -57px; top: -302px; width: 559px; height: 801px; max-width: none; }
-.completed-tree-strip {
-  left: 0;
-  top: 706px;
-  display: flex;
-  width: 393px;
-  height: 146px;
-  overflow-x: auto;
-  background: var(--pale);
-  scrollbar-width: none;
-}
-.completed-tree-strip::-webkit-scrollbar { display: none; }
-.completed-tree-strip article { flex: 0 0 98px; display: grid; height: 146px; padding-top: 27px; place-items: start center; }
-.completed-tree-strip article img { width: 46px; height: 77px; object-fit: contain; }
-.completed-tree-strip article span { color: #000; font-size: 13px; }
-.completed-tree-strip > p { width: 100%; margin: auto; color: var(--green); font-size: 16px; text-align: center; }
+.empty-completed-garden { left: 47px; top: 706px; width: 299px; margin: 0; font-size: 16px; text-align: center; }
 
 .file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
 .error-note { padding: 7px 10px; border-radius: 10px; color: #7b3f38; background: rgba(255, 255, 255, .88); font-family: system-ui, sans-serif; font-size: 11px; font-weight: 700; text-align: center; }

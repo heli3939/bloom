@@ -1,5 +1,5 @@
 <svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="tabler:fence">
-<path id="Vector" d="M10 26.6667V33.3333H16.6667V26.6667M16.6667 20V10L13.3333 6.66667L10 10V20M23.3333 26.6667V33.3333H30V26.6667M30 20V10L26.6667 6.66667L23.3333 10V20M6.66667 20V26.6667H33.3333V20H6.66667Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector" d="M10 26.6667V33.3333H16.6667V26.6667M16.6667 20V10L13.3333 6.66667L10 10V20M23.3333 26.6667V33.3333H30V26.6667M30 20V10L26.6667 6.66667L23.3333 10V20M6.66667 20V26.6667H33.3333V20H6.66667Z" stroke="#47642A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

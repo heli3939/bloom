@@ -3,10 +3,6 @@ import backIcon from '../assets/figma/back.svg'
 import bloomLogo from '../assets/figma/bloom-logo.svg'
 import completionGarden from '../assets/figma/completion-garden.png'
 import cyclingScene from '../assets/figma/cycling-1.png'
-import galleryTree15 from '../assets/figma/gallery-tree-15.svg'
-import galleryTree20 from '../assets/figma/gallery-tree-20.svg'
-import galleryTree30 from '../assets/figma/gallery-tree-30.svg'
-import galleryTree5 from '../assets/figma/gallery-tree-5.svg'
 import mealScene from '../assets/figma/meal-1.png'
 import moneyBag from '../assets/figma/money-bag.svg'
 import paintScene from '../assets/figma/paint-1.png'
@@ -22,7 +18,6 @@ import { useDailyTasks } from '../hooks/useDailyTasks'
 import { useRoute } from '../hooks/useRoute'
 
 const activityArtwork = [picnicScene, mealScene, placeScene, cyclingScene, paintScene]
-const galleryArtwork = [galleryTree5, galleryTree15, galleryTree20, galleryTree30]
 
 function activityRouteId(task) {
   return String(task.taskId ?? task.id)
@@ -193,16 +188,7 @@ function Home() {
         <div className="completion-art">
           <img src={completionGarden} alt="The garden of trees planted with your friend" />
         </div>
-        <div className="completed-tree-strip" aria-label="Completed trees">
-          {completedTrees.length ? completedTrees.map((tree, index) => (
-            <article key={tree._id}>
-              <img src={galleryArtwork[index % galleryArtwork.length]} alt="" />
-              <span>Tree {index + 1}</span>
-            </article>
-          )) : (
-            <p>Your completed trees will grow here.</p>
-          )}
-        </div>
+        {!completedTrees.length && <p className="empty-completed-garden">Your completed trees will grow here.</p>}
         {error && <p className="error-note floating-error" role="alert">{error}</p>}
       </main>
     )

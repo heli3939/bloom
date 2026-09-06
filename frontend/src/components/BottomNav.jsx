@@ -1,7 +1,7 @@
 import cameraIcon from '../assets/figma/camera.svg'
 import fenceIcon from '../assets/figma/fence.svg'
+import gameCardsIcon from '../assets/figma/game-cards.svg'
 import peopleIcon from '../assets/figma/people.svg'
-import settingsIcon from '../assets/figma/settings.svg'
 import storeIcon from '../assets/figma/store.svg'
 
 function BottomNav({ activeView, needsNewTree, onCaptureTree, onNavigate }) {
@@ -30,17 +30,17 @@ function BottomNav({ activeView, needsNewTree, onCaptureTree, onNavigate }) {
         <img src={cameraIcon} alt="" />
       </button>
       <button
-        className="nav-people"
+        className="nav-activities"
         type="button"
         aria-label="Activities"
         disabled={needsNewTree}
         aria-current={activeView === 'activities' ? 'page' : undefined}
         onClick={() => onNavigate('activities')}
       >
-        <img src={peopleIcon} alt="" />
+        <img src={gameCardsIcon} alt="" />
       </button>
-      <button type="button" aria-label="Settings — coming soon" disabled>
-        <img src={settingsIcon} alt="" />
+      <button className="nav-people" type="button" aria-label="Friends — coming soon" disabled>
+        <img src={peopleIcon} alt="" />
       </button>
     </nav>
   )
