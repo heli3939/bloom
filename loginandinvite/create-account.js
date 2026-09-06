@@ -197,14 +197,16 @@
             body: JSON.stringify({ username: invite }),
           });
         } catch (friendError) {
+          localStorage.removeItem('bloom_token');
           toast(`Account saved, but invite failed: ${friendError.message}`, 'error');
-          setTimeout(goToGarden, 1400);
+          setTimeout(() => { window.location.href = 'login.html'; }, 1400);
           return;
         }
       }
 
-      toast('Garden planted! Welcome 🌷');
-      setTimeout(goToGarden, 700);
+      localStorage.removeItem('bloom_token');
+      toast('Garden planted! Sign in to continue 🌷');
+      setTimeout(() => { window.location.href = 'login.html'; }, 700);
     } catch (err) {
       toast(err.message, 'error');
       els.signUp.disabled = false;
