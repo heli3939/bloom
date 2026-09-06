@@ -1,8 +1,35 @@
+import { useSyncExternalStore } from 'react'
 import Home from './pages/Home'
 import './App.css'
 
+function subscribeToViewport(callback) {
+  window.addEventListener('resize', callback)
+  window.addEventListener('orientationchange', callback)
+  return () => {
+    window.removeEventListener('resize', callback)
+    window.removeEventListener('orientationchange', callback)
+  }
+}
+
+function viewportWidth() {
+  return window.innerWidth
+}
+
 function App() {
-  return <Home />
+  const width = useSyncExternalStore(subscribeToViewport, viewportWidth, () => 393)
+  const mobileScale = width <= 480 ? width / 393 : 1
+
+  return (
+    <div
+      className="mobile-viewport"
+      style={{
+        '--bloom-scale': mobileScale,
+        '--bloom-height': `${852 * mobileScale}px`,
+      }}
+    >
+      <Home />
+    </div>
+  )
 }
 
 export default App
