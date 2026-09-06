@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import backIcon from '../assets/figma/back.svg'
 import bloomLogo from '../assets/figma/bloom-logo.svg'
 import completionGarden from '../assets/figma/completion-garden.png'
@@ -64,6 +64,12 @@ function Home() {
     : Math.min(activityIndex, Math.max(tasks.length - 1, 0))
   const captureTask = captureMatch && routeTaskIndex >= 0 ? tasks[routeTaskIndex] : null
   const isActivitiesRoute = path === '/activities' || Boolean(activityMatch) || Boolean(captureMatch)
+
+  useEffect(() => {
+    if (isTreeDead && path !== '/' && path !== '/trees/new') {
+      navigate('/', { replace: true })
+    }
+  }, [isTreeDead, navigate, path])
 
   async function handleNewTreeConfirmation(referencePhoto) {
     const createdTree = await startNewTree(referencePhoto)
@@ -198,10 +204,15 @@ function Home() {
     <main className="figma-shell garden-page">
       <FlowerBackdrop />
       <img className="bloom-logo" src={bloomLogo} alt="Bloom" />
-      <TreeProgress progress={displayedProgress} />
+      <TreeProgress progress={displayedProgress} isDead={isTreeDead} />
       {isTreeCompleted && (
         <p className="completed-tree-prompt" role="status">
           Your tree bloomed! Tap the camera to plant a new tree.
+        </p>
+      )}
+      {isTreeDead && (
+        <p className="completed-tree-prompt dead-tree-prompt" role="status">
+          Your tree died after 15 inactive days. Try more activities next time! Tap the camera to take a new plant photo and restart.
         </p>
       )}
       <BottomNav

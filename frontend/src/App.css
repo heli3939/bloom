@@ -125,6 +125,7 @@ progress::-moz-progress-bar { border-radius: 50px; background: var(--pale); }
   font-weight: 700;
   text-align: center;
 }
+.dead-tree-prompt { top: 680px; }
 
 .bottom-nav { inset: 0; pointer-events: none; }
 .bottom-nav button {
