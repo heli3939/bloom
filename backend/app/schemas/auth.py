@@ -19,6 +19,7 @@ class UserPublic(BaseModel):
     username: str
     email: EmailStr
     profileImage: str | None = None
+    gardenCode: str | None = None
 
 
 class TokenResponse(BaseModel):

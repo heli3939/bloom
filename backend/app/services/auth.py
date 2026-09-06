@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 from pymongo.errors import DuplicateKeyError
 
 from app.config import get_settings
-from app.database import users_col
+from app.database import next_garden_code, users_col
 from app.models.serialize import serialize_id
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -46,6 +46,23 @@ def decode_access_token(token: str) -> str:
     return user_id
 
 
+def ensure_garden_code(doc: dict) -> dict:
+    if doc.get("gardenCode"):
+        return doc
+    for _ in range(12):
+        code = next_garden_code()
+        try:
+            users_col().update_one({"_id": doc["_id"]}, {"$set": {"gardenCode": code}})
+        except DuplicateKeyError:
+            continue
+        doc["gardenCode"] = code
+        return doc
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Could not assign a garden ID",
+    )
+
+
 def user_public(doc: dict) -> dict:
     serialized = serialize_id(doc) or {}
     serialized.pop("passwordHash", None)
@@ -53,22 +70,33 @@ def user_public(doc: dict) -> dict:
 
 
 def register_user(username: str, email: str, password: str, profile_image: str | None) -> dict:
-    document = {
+    base = {
         "username": username.strip(),
         "email": email.strip().lower(),
         "passwordHash": hash_password(password),
         "profileImage": profile_image,
         "createdAt": datetime.now(timezone.utc),
     }
-    try:
-        result = users_col().insert_one(document)
-    except DuplicateKeyError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username or email already exists",
-        ) from exc
-    document["_id"] = result.inserted_id
-    return user_public(document)
+    last_error: DuplicateKeyError | None = None
+    for _ in range(12):
+        document = {**base, "gardenCode": next_garden_code()}
+        try:
+            result = users_col().insert_one(document)
+        except DuplicateKeyError as exc:
+            last_error = exc
+            key = (exc.details or {}).get("keyPattern") or (exc.details or {}).get("keyValue") or {}
+            if "gardenCode" in key:
+                continue
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username or email already exists",
+            ) from exc
+        document["_id"] = result.inserted_id
+        return user_public(document)
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Username or email already exists",
+    ) from last_error
 
 
 def authenticate_user(identifier: str, password: str) -> dict:
@@ -98,4 +126,4 @@ def get_user_by_id(user_id: str) -> dict:
     user = users_col().find_one({"_id": object_id})
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    return user
+    return ensure_garden_code(user)

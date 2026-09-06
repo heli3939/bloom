@@ -18,7 +18,7 @@ def login(body: LoginRequest) -> TokenResponse:
     identifier = body.email or body.username
     if not identifier:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email or username is required")
-    user = user_public(authenticate_user(identifier, body.password))
+    user = user_public(ensure_garden_code(authenticate_user(identifier, body.password)))
     return TokenResponse(access_token=create_access_token(user["id"]), user=UserPublic(**user))
 
 

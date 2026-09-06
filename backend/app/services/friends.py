@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from fastapi import HTTPException, status
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import BulkWriteError, DuplicateKeyError
 
 from app.database import friends_col, users_col
 from app.services.auth import user_public
@@ -16,24 +16,44 @@ def _as_object_id(value: str, detail: str) -> ObjectId:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail) from exc
 
 
-def add_friend(current_user: dict, username: str) -> dict:
-    query = username.strip()
+def _find_friend(username: str | None, garden_code: str | None) -> dict:
+    query = (garden_code or username or "").strip()
     if not query:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username is required")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Garden ID or username is required",
+        )
 
+    searches = [
+        users_col().find_one({"gardenCode": query.upper()}),
+        users_col().find_one({"username": {"$regex": f"^{re.escape(query)}$", "$options": "i"}}),
+    ]
     if "@" in query:
-        friend = users_col().find_one({"email": query.lower()})
-    else:
-        friend = users_col().find_one({
-            "username": {"$regex": f"^{re.escape(query)}$", "$options": "i"}
-        })
+        searches.append(users_col().find_one({"email": query.lower()}))
+    if ObjectId.is_valid(query):
+        searches.append(users_col().find_one({"_id": ObjectId(query)}))
 
-    if friend is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    for friend in searches:
+        if friend is not None:
+            return friend
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="No gardener found with that code",
+    )
 
+
+def add_friend(
+    current_user: dict,
+    username: str | None = None,
+    garden_code: str | None = None,
+) -> dict:
+    friend = _find_friend(username, garden_code)
     me_id = _as_object_id(current_user["id"], "Invalid user")
     if friend["_id"] == me_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You cannot add yourself")
+
+    if are_friends(me_id, friend["_id"]):
+        return user_public(friend)
 
     now = datetime.now(timezone.utc)
     documents = [
@@ -42,7 +62,9 @@ def add_friend(current_user: dict, username: str) -> dict:
     ]
     try:
         friends_col().insert_many(documents, ordered=True)
-    except DuplicateKeyError as exc:
+    except (DuplicateKeyError, BulkWriteError) as exc:
+        if are_friends(me_id, friend["_id"]):
+            return user_public(friend)
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already friends") from exc
 
     return user_public(friend)
@@ -50,12 +72,12 @@ def add_friend(current_user: dict, username: str) -> dict:
 
 def list_friends(current_user: dict) -> list[dict]:
     me_id = _as_object_id(current_user["id"], "Invalid user")
-    links = list(friends_col().find({"userId": me_id}))
+    links = list(friends_col().find({"userId": me_id}).sort("createdAt", -1))
     friend_ids = [link["friendId"] for link in links]
     if not friend_ids:
         return []
-    users = users_col().find({"_id": {"$in": friend_ids}})
-    return [user_public(user) for user in users]
+    users = {user["_id"]: user for user in users_col().find({"_id": {"$in": friend_ids}})}
+    return [user_public(users[friend_id]) for friend_id in friend_ids if friend_id in users]
 
 
 def are_friends(user_id: ObjectId, friend_id: ObjectId) -> bool:

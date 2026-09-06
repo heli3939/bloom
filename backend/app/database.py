@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 from pymongo.collection import Collection
 from pymongo.database import Database
 
@@ -46,11 +46,48 @@ def completions_col() -> Collection:
     return get_database()["TASK_COMPLETIONS"]
 
 
+def _max_existing_garden_seq() -> int:
+    highest = 0
+    for user in users_col().find({"gardenCode": {"$regex": r"^BLM\d+$"}}, {"gardenCode": 1}):
+        digits = str(user.get("gardenCode", ""))[3:]
+        if digits.isdigit():
+            highest = max(highest, int(digits))
+    return highest
+
+
+def next_garden_code() -> str:
+    highest = _max_existing_garden_seq()
+    get_database()["COUNTERS"].update_one(
+        {"_id": "gardenCode"},
+        {"$max": {"seq": highest}},
+        upsert=True,
+    )
+    counter = get_database()["COUNTERS"].find_one_and_update(
+        {"_id": "gardenCode"},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return f"BLM{int(counter['seq']):03d}"
+
+
+def backfill_garden_codes() -> None:
+    from app.services.auth import ensure_garden_code
+
+    missing = users_col().find(
+        {"$or": [{"gardenCode": {"$exists": False}}, {"gardenCode": None}, {"gardenCode": ""}]}
+    )
+    for user in missing:
+        ensure_garden_code(user)
+
+
 def ensure_indexes() -> None:
     users_col().create_index("email", unique=True)
     users_col().create_index("username", unique=True)
+    users_col().create_index("gardenCode", unique=True, sparse=True)
     friends_col().create_index([("userId", 1), ("friendId", 1)], unique=True)
     trees_col().create_index([("userIds", 1), ("status", 1)])
+    backfill_garden_codes()
 
 
 def close_database_connection() -> None:
