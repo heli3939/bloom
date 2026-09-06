@@ -88,6 +88,7 @@ function ActivitySelector({
               />
               <label className="activity-image" htmlFor={`quick-photo-${item.id}`}>
                 <img src={artwork[index % artwork.length]} alt={item.title} />
+                <span className="activity-growth-value">+{item.growthValue}% growth</span>
               </label>
             </div>
           )
