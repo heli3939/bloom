@@ -84,8 +84,16 @@ button { color: inherit; }
 }
 .garden-panel progress { left: 105px; top: 175px; }
 progress::-webkit-progress-bar { background: var(--white); }
-progress::-webkit-progress-value { border-radius: 50px; background: var(--pale); }
-progress::-moz-progress-bar { border-radius: 50px; background: var(--pale); }
+progress::-webkit-progress-value {
+  border-radius: 50px;
+  background: var(--pale);
+  transition: width 0.6s ease;
+}
+progress::-moz-progress-bar {
+  border-radius: 50px;
+  background: var(--pale);
+  transition: width 0.6s ease;
+}
 .coin-pill, .gallery-money {
   display: grid;
   width: 131px;

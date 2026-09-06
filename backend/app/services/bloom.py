@@ -8,6 +8,10 @@ from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 
 
+SHARED_TASK_GROWTH = 10
+MAX_DAILY_COMPLETED_TASKS = 3
+
+
 class BloomError(Exception):
     def __init__(self, status_code: int, detail: str):
         super().__init__(detail)
@@ -30,6 +34,7 @@ def serialize_tree(tree: Dict[str, Any]) -> Dict[str, Any]:
     result["_id"] = str(result["_id"])
     result["userIds"] = [str(user_id) for user_id in result["userIds"]]
     result["speciesId"] = str(result["speciesId"])
+    result["growth"] = min(100, int(result.get("growth") or 0))
     return result
 
 
@@ -150,7 +155,7 @@ def get_or_create_daily_tasks(
             "taskId": str(item["taskId"]),
             "title": tasks_by_id[item["taskId"]]["title"],
             "description": tasks_by_id[item["taskId"]]["description"],
-            "growthValue": tasks_by_id[item["taskId"]]["growthValue"],
+            "growthValue": SHARED_TASK_GROWTH,
             "taskDate": item["taskDate"],
             "completed": item.get("completed", False),
             "submissionCount": len(submissions_by_daily_task[item["_id"]]),
@@ -187,7 +192,7 @@ def submit_daily_task(
         "taskDate": daily_task["taskDate"],
         "completed": True,
     }
-    if db.DAILY_TASKS.count_documents(completed_filter) >= 3:
+    if db.DAILY_TASKS.count_documents(completed_filter) >= MAX_DAILY_COMPLETED_TASKS:
         raise BloomError(409, "Three tasks have already been completed today")
 
     now = datetime.now(timezone.utc)
@@ -210,11 +215,9 @@ def submit_daily_task(
         )
         task_completed = completion.modified_count == 1
         if task_completed:
-            task = db.TASKS.find_one({"_id": daily_task["taskId"]})
-            growth_value = task["growthValue"] if task else 0
             updated_tree = db.TREES.find_one_and_update(
                 {"_id": tree["_id"]},
-                {"$inc": {"growth": growth_value}, "$set": {"lastActivityAt": now}},
+                {"$inc": {"growth": SHARED_TASK_GROWTH}, "$set": {"lastActivityAt": now}},
                 return_document=ReturnDocument.AFTER,
             )
             new_growth = min(100, updated_tree.get("growth", 0))

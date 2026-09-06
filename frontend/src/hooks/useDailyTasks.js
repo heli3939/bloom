@@ -49,6 +49,16 @@ export function useDailyTasks() {
   }, [])
 
   useEffect(() => {
+    if (!context || !tree?._id || tree.status !== 'active') return
+    const treeId = tree._id
+    const session = context
+    const timer = window.setInterval(() => {
+      loadTree(treeId, session).catch(() => {})
+    }, 4000)
+    return () => window.clearInterval(timer)
+  }, [context, tree?._id, tree?.status, loadTree])
+
+  useEffect(() => {
     let cancelled = false
 
     async function initialise() {

@@ -9,8 +9,8 @@ DEMO_SPECIES_NAME = "Demo Tree"
 DEMO_TASKS = [
     ("Go for a picnic", "Pack something simple and spend time together outdoors.", 10),
     ("Grab a meal together", "Share breakfast, lunch, or dinner together.", 10),
-    ("Visit a new place", "Explore somewhere neither of you has visited before.", 5),
-    ("Go for cycling", "Take your bikes out and enjoy a ride together.", 5),
+    ("Visit a new place", "Explore somewhere neither of you has visited before.", 10),
+    ("Go for cycling", "Take your bikes out and enjoy a ride together.", 10),
     ("Paint and sip", "Make something colourful while sharing a drink.", 10),
 ]
 

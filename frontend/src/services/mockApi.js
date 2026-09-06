@@ -1,6 +1,8 @@
 import { mockTasks } from '../data/mockTasks'
 
 const STORAGE_KEY = 'bloom-demo-api'
+const SHARED_TASK_GROWTH = 10
+const MAX_DAILY_COMPLETED_TASKS = 3
 const context = {
   currentUserId: 'demo-current-user',
   friendUserId: 'demo-friend-user',
@@ -123,7 +125,7 @@ export async function submitDailyTask(dailyTaskId, { userId, photoUrl }) {
   const task = state.tasks.find((item) => item._id === dailyTaskId)
   if (!task) throw new Error('Demo daily task was not found')
   if (state.tree.status !== 'active') throw new Error('This tree is no longer active')
-  if (state.tasks.filter((item) => item.completed).length >= 3) {
+  if (state.tasks.filter((item) => item.completed).length >= MAX_DAILY_COMPLETED_TASKS) {
     throw new Error('Three tasks have already been completed today')
   }
 
@@ -134,10 +136,10 @@ export async function submitDailyTask(dailyTaskId, { userId, photoUrl }) {
   task.submissionCount = task.submittedUserIds.length
 
   let taskCompleted = false
-  if (task.submissionCount === 2) {
+  if (task.submissionCount >= 2) {
     task.completed = true
     taskCompleted = true
-    state.tree.growth = Math.min(100, state.tree.growth + task.growthValue)
+    state.tree.growth = Math.min(100, state.tree.growth + SHARED_TASK_GROWTH)
     state.tree.lastActivityAt = demoTimestamp(state)
     if (state.tree.growth === 100) {
       state.tree.status = 'completed'
