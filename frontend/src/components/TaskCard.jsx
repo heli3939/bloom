@@ -5,7 +5,6 @@ function TaskCard({
   submission,
   isCompleted,
   onSubmitPhoto,
-  onSimulateFriendSubmission,
 }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null)
   const submittedPhoto = submission.currentUser
@@ -44,7 +43,7 @@ function TaskCard({
 
       <dl>
         <div>
-          <dt>Current user</dt>
+          <dt>You</dt>
           <dd>{submittedPhoto ? 'Submitted' : 'Waiting'}</dd>
         </div>
         <div>
@@ -78,16 +77,6 @@ function TaskCard({
           {submittedPhoto ? 'Photo submitted' : 'Submit my photo'}
         </button>
       </form>
-
-      <button
-        type="button"
-        onClick={() => onSimulateFriendSubmission(task)}
-        disabled={submission.friendSubmitted}
-      >
-        {submission.friendSubmitted
-          ? 'Friend submission simulated'
-          : 'Development only: Simulate friend submission'}
-      </button>
 
       {isCompleted && <p><strong>Task completed by both users.</strong></p>}
     </article>

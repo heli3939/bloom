@@ -1,90 +1,90 @@
-import { useReducer } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  addFriend,
+  completeDailyTask,
+  createTree,
+  getActiveTree,
+  listDailyTasks,
+  listFriends,
+} from '../services/api'
 
-const initialState = {
-  hasActiveTree: false,
-  treeProgress: 0,
-  completedTaskIds: [],
-  submissionsByTask: {},
-  treeReferencePhoto: null,
-}
+export function useDailyTasks(currentUser) {
+  const [tree, setTree] = useState(null)
+  const [dailyTasks, setDailyTasks] = useState([])
+  const [friends, setFriends] = useState([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
-function applySubmission(state, task, submission) {
-  const taskSubmissions = {
-    currentUser: null,
-    friendSubmitted: false,
-    ...state.submissionsByTask[task.id],
-    ...submission,
-  }
-
-  const wasCompleted = state.completedTaskIds.includes(task.id)
-  const isNowCompleted = Boolean(taskSubmissions.currentUser && taskSubmissions.friendSubmitted)
-
-  return {
-    ...state,
-    treeProgress:
-      isNowCompleted && !wasCompleted
-        ? Math.min(100, state.treeProgress + task.growthValue)
-        : state.treeProgress,
-    completedTaskIds:
-      isNowCompleted && !wasCompleted
-        ? [...state.completedTaskIds, task.id]
-        : state.completedTaskIds,
-    submissionsByTask: {
-      ...state.submissionsByTask,
-      [task.id]: taskSubmissions,
-    },
-  }
-}
-
-function dailyTasksReducer(state, action) {
-  if (action.type === 'start-new-tree') {
-    if (!action.referencePhoto) return state
-
-    return {
-      hasActiveTree: true,
-      treeProgress: 0,
-      completedTaskIds: [],
-      submissionsByTask: {},
-      treeReferencePhoto: action.referencePhoto,
+  const refresh = useCallback(async () => {
+    if (!currentUser) return
+    setError('')
+    const [activeTree, friendList] = await Promise.all([getActiveTree(), listFriends()])
+    setTree(activeTree)
+    setFriends(friendList)
+    if (activeTree) {
+      setDailyTasks(await listDailyTasks(activeTree.id))
+    } else {
+      setDailyTasks([])
     }
+  }, [currentUser])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      try {
+        await refresh()
+      } catch (err) {
+        if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [refresh])
+
+  async function submitCurrentUserPhoto(task, photo) {
+    const data = await completeDailyTask(task.id, photo.previewUrl)
+    setDailyTasks(data.dailyTasks)
+    setTree(await getActiveTree())
   }
 
-  const existingSubmission = state.submissionsByTask[action.task?.id]
-
-  switch (action.type) {
-    case 'submit-current-user-photo':
-      if (existingSubmission?.currentUser) return state
-      return applySubmission(state, action.task, { currentUser: action.photo })
-
-    case 'simulate-friend-submission':
-      if (existingSubmission?.friendSubmitted) return state
-      return applySubmission(state, action.task, { friendSubmitted: true })
-
-    default:
-      return state
-  }
-}
-
-export function useDailyTasks() {
-  const [state, dispatch] = useReducer(dailyTasksReducer, initialState)
-
-  function submitCurrentUserPhoto(task, photo) {
-    dispatch({ type: 'submit-current-user-photo', task, photo })
+  async function startNewTree(referencePhoto, friendId) {
+    const created = await createTree({
+      friendId,
+      referencePhotoUrl: referencePhoto.previewUrl,
+    })
+    setTree(created)
+    setDailyTasks(await listDailyTasks(created.id))
   }
 
-  function simulateFriendSubmission(task) {
-    dispatch({ type: 'simulate-friend-submission', task })
+  async function connectFriend(username) {
+    const friend = await addFriend(username)
+    setFriends((current) =>
+      current.some((item) => item.id === friend.id) ? current : [...current, friend],
+    )
+    return friend
   }
 
-  function startNewTree(referencePhoto) {
-    dispatch({ type: 'start-new-tree', referencePhoto })
-  }
+  const hasActiveTree = Boolean(tree)
+  const treeProgress = tree?.growth ?? 0
+  const isTreeCompleted = tree?.status === 'completed' || treeProgress >= 100
 
   return {
-    ...state,
-    isTreeCompleted: state.hasActiveTree && state.treeProgress === 100,
+    loading,
+    error,
+    setError,
+    friends,
+    hasActiveTree,
+    treeProgress,
+    isTreeCompleted,
+    dailyTasks,
     submitCurrentUserPhoto,
-    simulateFriendSubmission,
     startNewTree,
+    connectFriend,
+    refresh,
   }
 }

@@ -4,14 +4,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.database import close_database_connection
+from app.database import close_database_connection, ensure_indexes
 from app.routes import auth, friends, health, tasks, trees
+from app.services.seed import seed_catalog
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    ensure_indexes()
+    seed_catalog()
     yield
     close_database_connection()
 
@@ -36,6 +39,7 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(friends.router, prefix=settings.api_prefix)
 app.include_router(trees.router, prefix=settings.api_prefix)
 app.include_router(tasks.router, prefix=settings.api_prefix)
+app.include_router(tasks.daily_router, prefix=settings.api_prefix)
 
 
 @app.get("/", tags=["meta"])
