@@ -2,13 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.deps import get_current_user
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserPublic
-from app.services.auth import (
-    authenticate_user,
-    create_access_token,
-    ensure_garden_code,
-    register_user,
-    user_public,
-)
+from app.services.auth import authenticate_user, create_access_token, ensure_garden_code, register_user, user_public
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
