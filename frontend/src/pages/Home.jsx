@@ -71,6 +71,20 @@ function Home() {
     }
   }, [isTreeDead, navigate, path])
 
+  useEffect(() => {
+    if (isLoading) return
+    if (sessionStorage.getItem('bloom.postLogin') !== 'capture') return
+    sessionStorage.removeItem('bloom.postLogin')
+    if (needsNewTree) {
+      navigate('/trees/new', { replace: true })
+      return
+    }
+    const firstTask = tasks[0]
+    if (firstTask) {
+      navigate(`/activities/${encodeURIComponent(activityRouteId(firstTask))}/capture`, { replace: true })
+    }
+  }, [isLoading, needsNewTree, tasks, navigate])
+
   async function handleNewTreeConfirmation(referencePhoto) {
     const createdTree = await startNewTree(referencePhoto)
     if (!createdTree) return
@@ -86,6 +100,10 @@ function Home() {
     if (nextView === 'activities') {
       const task = tasks[selectedActivityIndex] ?? tasks[0]
       if (task) navigate(`/activities/${encodeURIComponent(activityRouteId(task))}`)
+      return
+    }
+    if (nextView === 'invite') {
+      window.location.href = '/auth/invite.html'
       return
     }
     navigate('/')

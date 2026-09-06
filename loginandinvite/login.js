@@ -126,6 +126,7 @@
         body: JSON.stringify(payload),
       });
       saveSession(data);
+      sessionStorage.setItem('bloom.postLogin', 'capture');
       toast(`Welcome back, ${data.user.username}! 🌷`);
       setTimeout(goToGarden, 600);
     } catch (err) {

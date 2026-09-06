@@ -39,7 +39,13 @@ function BottomNav({ activeView, needsNewTree, onCaptureTree, onNavigate }) {
       >
         <img src={gameCardsIcon} alt="" />
       </button>
-      <button className="nav-people" type="button" aria-label="Friends — coming soon" disabled>
+      <button
+        className="nav-people"
+        type="button"
+        aria-label="Invite friends"
+        aria-current={activeView === 'invite' ? 'page' : undefined}
+        onClick={() => onNavigate('invite')}
+      >
         <img src={peopleIcon} alt="" />
       </button>
     </nav>
