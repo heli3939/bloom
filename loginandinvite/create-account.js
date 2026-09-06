@@ -1,5 +1,6 @@
 (() => {
   const $ = (id) => document.getElementById(id);
+  const API_BASE = 'http://localhost:8000';
 
   const els = {
     avatarInput: $('avatarInput'),
@@ -141,22 +142,18 @@
 
     if (!contact) {
       els.rowContact.classList.add('error');
-      problems.push('Enter phone or email');
-    } else {
-      const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
-      const looksLikePhone = /^\+?\d[\d\s-]{5,}$/.test(contact);
-      if (!looksLikeEmail && !looksLikePhone) {
-        els.rowContact.classList.add('error');
-        problems.push('That doesn’t look like a valid phone or email');
-      }
+      problems.push('Enter your email');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+      els.rowContact.classList.add('error');
+      problems.push('Please enter a valid email address');
     }
 
     if (!password) {
       els.rowPassword.classList.add('error');
       problems.push('Please set a password');
-    } else if (password.length < 6) {
+    } else if (password.length < 8) {
       els.rowPassword.classList.add('error');
-      problems.push('Password must be at least 6 characters');
+      problems.push('Password must be at least 8 characters');
     }
 
     if (!els.agree.checked) {
@@ -176,18 +173,51 @@
     const original = els.signUp.textContent;
     els.signUp.textContent = 'Planting… 🌱';
 
-    // Save username so login page pre-fills it
-    localStorage.setItem('bloom.username', els.contact.value.trim());
+    const email = els.contact.value.trim().toLowerCase();
+    const payload = {
+      username: els.nickname.value.trim(),
+      email,
+      password: els.password.value,
+      profileImage: localStorage.getItem(STORAGE.AVATAR) || null,
+    };
 
-    // Simulated request — replace with fetch('/api/auth/register', …) later
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      const resp = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    localStorage.removeItem(STORAGE.SIGNUP_DRAFT);
-    toast('Account created! Redirecting to sign in… 🌷');
+      if (resp.status === 409) {
+        toast('That email or nickname is already taken', 'error');
+        return;
+      }
+      if (resp.status === 422) {
+        const detail = await resp.json().catch(() => ({}));
+        const msg = detail?.detail?.[0]?.msg || 'Please check your inputs';
+        toast(msg, 'error');
+        return;
+      }
+      if (!resp.ok) {
+        toast(`Something went wrong (${resp.status})`, 'error');
+        return;
+      }
 
-    setTimeout(() => {
-      window.location.href = 'login.html';
-    }, 900);
+      const data = await resp.json();
+      localStorage.setItem('bloom.token', data.access_token);
+      localStorage.setItem('bloom.username', email);
+      localStorage.removeItem(STORAGE.SIGNUP_DRAFT);
+
+      toast('Account created! Redirecting to sign in… 🌷');
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 900);
+    } catch (err) {
+      toast('Cannot reach server — is the backend running?', 'error');
+    } finally {
+      els.signUp.disabled = false;
+      els.signUp.textContent = original;
+    }
   });
 
   // Boot

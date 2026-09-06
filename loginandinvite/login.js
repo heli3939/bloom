@@ -1,5 +1,6 @@
 (() => {
   const $ = (id) => document.getElementById(id);
+  const API_BASE = 'http://localhost:8000';
 
   const els = {
     back: $('backBtn'),
@@ -88,21 +89,18 @@
   });
 
   // ----- Validation -----
-  function validate(username, password) {
+  function validate(email, password) {
     const problems = [];
-    if (!username.trim()) {
+    if (!email.trim()) {
       els.fieldUser.classList.add('error');
-      problems.push('Please enter your phone number or username');
-    } else if (/^\d+$/.test(username) && username.length < 7) {
+      problems.push('Please enter your email');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       els.fieldUser.classList.add('error');
-      problems.push('Phone number is too short');
+      problems.push('Please enter a valid email address');
     }
     if (!password) {
       els.fieldPw.classList.add('error');
       problems.push('Please enter your password');
-    } else if (password.length < 6) {
-      els.fieldPw.classList.add('error');
-      problems.push('Password must be at least 6 characters');
     }
     return problems;
   }
@@ -110,9 +108,9 @@
   // ----- Sign in -----
   els.form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = els.username.value;
+    const email = els.username.value.trim().toLowerCase();
     const password = els.password.value;
-    const problems = validate(username, password);
+    const problems = validate(email, password);
     if (problems.length) {
       toast(problems[0], 'error');
       return;
@@ -121,15 +119,36 @@
     const original = els.signIn.textContent;
     els.signIn.textContent = 'Growing… 🌱';
 
-    // Save username for next visit
-    localStorage.setItem(STORAGE.USERNAME, username.trim());
+    try {
+      const resp = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // Simulated request; swap with real API call later
-    await new Promise((r) => setTimeout(r, 900));
+      if (resp.status === 401) {
+        toast('Wrong email or password', 'error');
+        return;
+      }
+      if (resp.status === 422) {
+        toast('Please check your inputs', 'error');
+        return;
+      }
+      if (!resp.ok) {
+        toast(`Something went wrong (${resp.status})`, 'error');
+        return;
+      }
 
-    els.signIn.disabled = false;
-    els.signIn.textContent = original;
-    toast(`Welcome back, ${username.trim()}! 🌷`);
+      const data = await resp.json();
+      localStorage.setItem('bloom.token', data.access_token);
+      localStorage.setItem(STORAGE.USERNAME, email);
+      toast(`Welcome back, ${data.user.username}! 🌷`);
+    } catch (err) {
+      toast('Cannot reach server — is the backend running?', 'error');
+    } finally {
+      els.signIn.disabled = false;
+      els.signIn.textContent = original;
+    }
   });
 
   // ----- Secondary buttons -----

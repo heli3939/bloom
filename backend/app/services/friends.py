@@ -15,18 +15,14 @@ def _as_object_id(value: str, detail: str) -> ObjectId:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail) from exc
 
 
-def add_friend(current_user: dict, username: str) -> dict:
-    query = username.strip()
+def add_friend(current_user: dict, garden_code: str) -> dict:
+    query = garden_code.strip().upper()
     if not query:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username is required")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Garden code is required")
 
-    if "@" in query:
-        friend = users_col().find_one({"email": query.lower()})
-    else:
-        friend = users_col().find_one({"username": query})
-
+    friend = users_col().find_one({"gardenCode": query})
     if friend is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No gardener found with that code")
 
     me_id = _as_object_id(current_user["id"], "Invalid user")
     if friend["_id"] == me_id:

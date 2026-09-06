@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Bloom · Invite Bestie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="invite.css" />
+</head>
+
+<body>
+  <main class="phone invite-phone">
+
+    <!-- Top bar with home button -->
+    <div class="topbar-invite">
+      <button type="button" class="home-btn" id="homeBtn" aria-label="Home">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11l9-8 9 8" />
+          <path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Card 1: Link Your Garden Duo -->
+    <section class="card link-card">
+      <div class="mascot-wrap">
+        <div class="mascot">
+          <img src="../profile.png" alt="Sprout mascot" />
+        </div>
+      </div>
+
+      <h1 class="link-title">Link Your Garden Duo</h1>
+      <p class="link-subtitle">
+        Enter your friend's Garden ID to adopt and grow your<br />
+        shared baby sprout together!
+      </p>
+
+      <div class="duo-row">
+        <!-- YOU -->
+        <div class="gardener">
+          <div class="gardener-circle you-circle">
+            <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+            <span class="badge you-badge">YOU</span>
+          </div>
+          <span class="gardener-label">Gardener 1</span>
+        </div>
+
+        <!-- dashed connector -->
+        <div class="duo-line" aria-hidden="true">
+          <svg class="dash-svg" viewBox="0 0 160 24" preserveAspectRatio="none">
+            <path d="M0 12 C 40 -4, 120 28, 160 12" stroke="#b8d47a" stroke-width="3"
+                  fill="none" stroke-linecap="round" stroke-dasharray="6 7" />
+          </svg>
+          <span class="leaf-node">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4a5c2e"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3c4 4 6 8 6 12a6 6 0 01-12 0c0-4 2-8 6-12z" />
+            </svg>
+          </span>
+        </div>
+
+        <!-- BESTIE -->
+        <div class="gardener">
+          <div class="gardener-circle bestie-circle">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="7.5" cy="7" r="3.5" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+            <span class="badge bestie-badge">SOON</span>
+          </div>
+          <span class="gardener-label">Bestie</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Card 2: Friend's Garden ID -->
+    <section class="card id-card">
+      <div class="id-header">
+        <span class="id-label">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 3c1 2 3 3 3 5a3 3 0 01-6 0c0-2 2-3 3-5z" />
+            <path d="M21 12c-2 1-3 3-5 3a3 3 0 010-6c2 0 3 2 5 3z" />
+            <path d="M3 12c2-1 3-3 5-3a3 3 0 010 6c-2 0-3-2-5-3z" />
+            <path d="M12 21c-1-2-3-3-3-5a3 3 0 016 0c0 2-2 3-3 5z" />
+          </svg>
+          Friend's Garden ID
+        </span>
+        <span class="id-hint">e.g. BLM001</span>
+      </div>
+
+      <div class="id-input-wrap" id="idInputWrap">
+        <input type="text" id="friendId" placeholder="e.g. BLM001" autocomplete="off" />
+        <button type="button" class="pill-btn paste-pill" id="pasteBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="8" y="3" width="8" height="4" rx="1" />
+            <path d="M8 5H6a2 2 0 00-2 2v13a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+          </svg>
+          Paste
+        </button>
+      </div>
+
+      <div class="info-banner">
+        <span class="info-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+               stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+        <p><b>Instant Pairing:</b> Both gardeners will share daily watering streaks, unlock tiny potted decorations, and harvest friendship seeds!</p>
+      </div>
+
+      <div class="my-id-row">
+        <span class="my-id-text">My Code: <b id="myId">BLM???</b></span>
+        <button type="button" class="pill-btn copy-pill" id="copyBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="12" height="12" rx="2" />
+            <path d="M5 15V5a2 2 0 012-2h10" />
+          </svg>
+          Copy
+        </button>
+      </div>
+    </section>
+
+    <button type="button" class="cta bind-cta" id="bindBtn">Bind Our Sprout Together</button>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <script src="invite.js"></script>
+</body>
+
+</html>

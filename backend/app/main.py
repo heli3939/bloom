@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import close_database_connection, ensure_indexes
 from app.routes import auth, friends, health, tasks, trees
+from app.services.auth import backfill_garden_codes
 from app.services.seed import seed_catalog
 
 settings = get_settings()
@@ -14,6 +15,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_indexes()
+    backfill_garden_codes()
     seed_catalog()
     yield
     close_database_connection()

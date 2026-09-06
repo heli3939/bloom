@@ -7,8 +7,16 @@ from passlib.context import CryptContext
 from pymongo.errors import DuplicateKeyError
 
 from app.config import get_settings
-from app.database import users_col
+from app.database import next_sequence, users_col
 from app.models.serialize import serialize_id
+
+
+def _format_garden_code(seq: int) -> str:
+    return f"BLM{seq:03d}"
+
+
+def allocate_garden_code() -> str:
+    return _format_garden_code(next_sequence("garden_code"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -57,6 +65,7 @@ def register_user(username: str, email: str, password: str, profile_image: str |
         "username": username.strip(),
         "email": email.strip().lower(),
         "passwordHash": hash_password(password),
+        "gardenCode": allocate_garden_code(),
         "profileImage": profile_image,
         "createdAt": datetime.now(timezone.utc),
     }
@@ -76,6 +85,19 @@ def authenticate_user(email: str, password: str) -> dict:
     if user is None or not verify_password(password, user.get("passwordHash", "")):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
     return user
+
+
+def backfill_garden_codes() -> None:
+    """Assign a gardenCode to any user missing one, ordered by createdAt."""
+    missing = users_col().find(
+        {"$or": [{"gardenCode": {"$exists": False}}, {"gardenCode": None}]},
+        sort=[("createdAt", 1)],
+    )
+    for user in missing:
+        users_col().update_one(
+            {"_id": user["_id"]},
+            {"$set": {"gardenCode": allocate_garden_code()}},
+        )
 
 
 def get_user_by_id(user_id: str) -> dict:

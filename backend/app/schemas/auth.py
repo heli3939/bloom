@@ -17,6 +17,7 @@ class UserPublic(BaseModel):
     id: str
     username: str
     email: EmailStr
+    gardenCode: str | None = None
     profileImage: str | None = None
 
 

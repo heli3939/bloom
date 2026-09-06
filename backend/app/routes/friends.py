@@ -18,4 +18,4 @@ def create_friend(
     body: AddFriendRequest,
     current_user: dict = Depends(get_current_user),
 ) -> UserPublic:
-    return UserPublic(**add_friend(current_user, body.username))
+    return UserPublic(**add_friend(current_user, body.gardenCode))
