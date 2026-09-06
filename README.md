@@ -91,8 +91,9 @@ npm run dev
 
 A `frontend/.env` is optional. Leave `VITE_API_URL` empty so Vite proxies `/api` to the backend.
 
-The app is at <http://localhost:5173>. Open the login page first:
+The app is at <http://localhost:5173>. If you are not logged in, it opens the welcome page:
 
+- Welcome: <http://localhost:5173/auth/welcome.html>
 - Sign in: <http://localhost:5173/auth/login.html>
 - Create account: <http://localhost:5173/auth/create-account.html>
 
@@ -104,6 +105,14 @@ To try the tree UI without Mongo or an account:
 cd frontend
 npm run dev:demo
 ```
+
+## Public website (GitHub Pages)
+
+After this branch is pushed, GitHub can host the frontend at:
+
+https://heli3939.github.io/bloom/
+
+In the GitHub repo open **Settings → Pages → Source** and choose **GitHub Actions**. The first deploy runs from `.github/workflows/deploy.yml`. The public site uses demo mode (no live Mongo login).
 
 ## Useful commands
 

@@ -16,6 +16,7 @@ import NewTreeForm from '../components/NewTreeForm'
 import TreeProgress from '../components/TreeProgress'
 import { useDailyTasks } from '../hooks/useDailyTasks'
 import { useRoute } from '../hooks/useRoute'
+import { withBase } from '../paths'
 
 const activityArtwork = [picnicScene, mealScene, placeScene, cyclingScene, paintScene]
 
@@ -103,7 +104,7 @@ function Home() {
       return
     }
     if (nextView === 'invite') {
-      window.location.href = '/auth/invite.html'
+      window.location.href = withBase('auth/invite.html')
       return
     }
     navigate('/')

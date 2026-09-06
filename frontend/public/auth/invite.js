@@ -17,7 +17,7 @@
 
     // ----- Home button -----
     els.home.addEventListener('click', () => {
-        window.location.href = '/';
+        window.location.href = new URL('../', window.location.href).href;
     });
 
     // ----- Toast -----

@@ -1,3 +1,4 @@
+import { withBase } from '../paths'
 import * as mockApi from './mockApi'
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? ''
@@ -29,7 +30,7 @@ async function request(path, options = {}) {
   })
   if (response.status === 401 && !DEMO_MODE) {
     localStorage.removeItem(TOKEN_KEY)
-    window.location.replace('/auth/login.html')
+    window.location.replace(withBase('auth/login.html'))
     throw new Error('Please log in')
   }
   if (!response.ok) {

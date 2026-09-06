@@ -40,5 +40,5 @@ function contactToEmail(contact) {
 }
 
 function goToGarden() {
-  window.location.href = '/'
+  window.location.href = new URL('../', window.location.href).href
 }

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import Home from './pages/Home'
+import { withBase } from './paths'
 import { demoModeEnabled, getStoredToken } from './services/api'
 import './App.css'
 
@@ -21,7 +22,7 @@ function App() {
   const mobileScale = width <= 480 ? width / 393 : 1
 
   if (!demoModeEnabled && !getStoredToken()) {
-    window.location.replace('/auth/login.html')
+    window.location.replace(withBase('auth/welcome.html'))
     return null
   }
 

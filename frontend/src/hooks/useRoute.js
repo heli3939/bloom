@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
+import { BASE_URL } from '../paths'
 
 function currentPath() {
-  return window.location.pathname.replace(/\/+$/, '') || '/'
+  const base = BASE_URL.replace(/\/$/, '')
+  let path = window.location.pathname
+  if (base && path.startsWith(base)) {
+    path = path.slice(base.length) || '/'
+  }
+  return path.replace(/\/+$/, '') || '/'
 }
 
 export function useRoute() {
@@ -19,7 +25,9 @@ export function useRoute() {
   function navigate(nextPath, { replace = false } = {}) {
     const normalizedPath = nextPath.replace(/\/+$/, '') || '/'
     if (normalizedPath === currentPath()) return
-    window.history[replace ? 'replaceState' : 'pushState']({}, '', normalizedPath)
+    const base = BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`
+    const url = normalizedPath === '/' ? base : `${base}${normalizedPath.replace(/^\//, '')}`
+    window.history[replace ? 'replaceState' : 'pushState']({}, '', url)
     setPath(normalizedPath)
   }
 

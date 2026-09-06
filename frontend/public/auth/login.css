@@ -39,7 +39,7 @@ body {
   min-height: 100vh;
   padding: 22px 24px 40px;
   background-color: var(--pink-bg);
-  background-image: url('/background.png');
+  background-image: url('../background.png');
   background-repeat: no-repeat;
   background-position: center bottom;
   background-size: 100% auto;
