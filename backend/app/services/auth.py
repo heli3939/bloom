@@ -71,8 +71,20 @@ def register_user(username: str, email: str, password: str, profile_image: str |
     return user_public(document)
 
 
-def authenticate_user(email: str, password: str) -> dict:
-    user = users_col().find_one({"email": email.strip().lower()})
+def authenticate_user(identifier: str, password: str) -> dict:
+    value = identifier.strip()
+    if not value:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+
+    if "@" in value:
+        user = users_col().find_one({"email": value.lower()})
+    else:
+        user = users_col().find_one({"username": value})
+        if user is None:
+            digits = "".join(character for character in value if character.isdigit())
+            if digits:
+                user = users_col().find_one({"email": f"{digits}@phone.bloom.app"})
+
     if user is None or not verify_password(password, user.get("passwordHash", "")):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
     return user

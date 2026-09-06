@@ -1,0 +1,169 @@
+/* Overrides & additions for create-account page (loaded after login.css) */
+
+.welcome { font-size: 24px; }
+.subtitle { color: #b8988f; }
+
+.signup-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 22px 20px 20px;
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green-dark);
+  font-weight: 700;
+  font-size: 15px;
+  padding-left: 4px;
+}
+
+.row-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 14px 18px;
+  transition: box-shadow 0.15s ease;
+}
+
+.row-input.pink { background: #fbdcd3; }
+.row-input.green { background: #e6efc4; }
+
+.row-input:focus-within {
+  box-shadow: 0 0 0 3px rgba(107, 138, 58, 0.35);
+}
+
+.row-input.error {
+  box-shadow: 0 0 0 3px rgba(198, 90, 78, 0.45);
+}
+
+.row-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--green-dark);
+  font-size: 15px;
+  min-width: 0;
+}
+
+.row-input.pink input::placeholder {
+  color: #dcb6ad;
+  font-weight: 700;
+}
+
+.row-input.green input::placeholder {
+  color: #b6bf82;
+  font-weight: 700;
+}
+
+.row-icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--green-dark);
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paste-btn {
+  border: none;
+  background: #fff;
+  color: var(--green-dark);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 8px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(61, 79, 36, 0.15);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.paste-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(61, 79, 36, 0.15);
+}
+
+/* Terms checkbox */
+.agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 4px 4px 0;
+  cursor: pointer;
+  font-weight: 700;
+  color: #3d4f24;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.agree input[type='checkbox'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.check-visual {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--green-dark);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  color: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.agree input[type='checkbox']:checked + .check-visual {
+  background: var(--green-dark);
+  color: #fff;
+}
+
+.agree input[type='checkbox']:focus-visible + .check-visual {
+  box-shadow: 0 0 0 3px rgba(107, 138, 58, 0.4);
+}
+
+.agree-text b {
+  color: var(--green-mid);
+  font-weight: 800;
+}
+
+/* Make the Sign Up button stretch full width like Sign In on login page */
+#signupForm {
+  display: flex;
+  flex-direction: column;
+}
+
+#signupForm .cta {
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Match footer spacing on this page */
+.create { margin-top: 14px; }

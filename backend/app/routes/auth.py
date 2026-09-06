@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.deps import get_current_user
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserPublic
@@ -15,7 +15,10 @@ def register(body: RegisterRequest) -> TokenResponse:
 
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginRequest) -> TokenResponse:
-    user = user_public(authenticate_user(body.email, body.password))
+    identifier = body.email or body.username
+    if not identifier:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email or username is required")
+    user = user_public(authenticate_user(identifier, body.password))
     return TokenResponse(access_token=create_access_token(user["id"]), user=UserPublic(**user))
 
 

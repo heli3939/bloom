@@ -9,8 +9,9 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
     password: str
+    email: str | None = None
+    username: str | None = None
 
 
 class UserPublic(BaseModel):

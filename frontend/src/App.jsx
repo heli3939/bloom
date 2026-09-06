@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import Home from './pages/Home'
-import Login from './pages/Login'
 import { getToken, me, setToken } from './services/api'
 import './App.css'
 
@@ -31,14 +30,8 @@ function App() {
   }
 
   if (!user) {
-    return (
-      <Login
-        onAuthenticated={(nextUser) => {
-          setUser(nextUser)
-          setSession('auth')
-        }}
-      />
-    )
+    window.location.replace('/auth/login.html')
+    return null
   }
 
   return (

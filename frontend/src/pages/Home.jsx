@@ -52,6 +52,7 @@ function Home({ currentUser, onLogout }) {
   function handleLogout() {
     logout()
     onLogout()
+    window.location.href = '/auth/login.html'
   }
 
   if (loading) {
