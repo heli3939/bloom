@@ -2,35 +2,62 @@ import { useState } from 'react'
 import NewTreeForm from '../components/NewTreeForm'
 import TaskCard from '../components/TaskCard'
 import TreeProgress from '../components/TreeProgress'
-import { mockTasks } from '../data/mockTasks'
 import { useDailyTasks } from '../hooks/useDailyTasks'
+import { logout } from '../services/api'
 
-function Home() {
+function Home({ currentUser, onLogout }) {
   const [isCreatingNewTree, setIsCreatingNewTree] = useState(false)
+  const [friendName, setFriendName] = useState('')
   const {
+    loading,
+    error,
+    setError,
+    friends,
     hasActiveTree,
     treeProgress,
     isTreeCompleted,
-    completedTaskIds,
-    submissionsByTask,
+    dailyTasks,
     submitCurrentUserPhoto,
-    simulateFriendSubmission,
     startNewTree,
-  } = useDailyTasks()
+    connectFriend,
+  } = useDailyTasks(currentUser)
 
-  function handleNewTreeConfirmation(referencePhoto) {
-    startNewTree(referencePhoto)
-    setIsCreatingNewTree(false)
+  async function handleNewTreeConfirmation(referencePhoto, friendId) {
+    try {
+      await startNewTree(referencePhoto, friendId)
+      setIsCreatingNewTree(false)
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
-  if (!hasActiveTree) {
+  async function handleAddFriend(event) {
+    event.preventDefault()
+    try {
+      await connectFriend(friendName)
+      setFriendName('')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleSubmitPhoto(task, photo) {
+    try {
+      await submitCurrentUserPhoto(task, photo)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  function handleLogout() {
+    logout()
+    onLogout()
+  }
+
+  if (loading) {
     return (
       <main>
-        <header>
-          <h1>Bloom</h1>
-          <p>You and your friend are connected. Start your first shared tree.</p>
-        </header>
-        <NewTreeForm onConfirm={handleNewTreeConfirmation} />
+        <p>Loading your tree…</p>
       </main>
     )
   }
@@ -39,42 +66,84 @@ function Home() {
     <main>
       <header>
         <h1>Bloom</h1>
-        <p>Complete today&apos;s activities to help your tree grow.</p>
+        <p>Signed in as {currentUser.username}.</p>
+        <button type="button" onClick={handleLogout}>Log out</button>
       </header>
 
-      <TreeProgress progress={treeProgress} />
+      {error && <p className="form-error">{error}</p>}
 
-      {isTreeCompleted ? (
-        <section aria-labelledby="tree-complete-heading">
-          <h2 id="tree-complete-heading">Your tree has fully bloomed!</h2>
-          <p>You and your friend completed this tree together.</p>
-          {isCreatingNewTree ? (
-            <NewTreeForm onConfirm={handleNewTreeConfirmation} />
-          ) : (
-            <button type="button" onClick={() => setIsCreatingNewTree(true)}>
-              Start a new tree
-            </button>
-          )}
+      <section aria-labelledby="friends-heading">
+        <h2 id="friends-heading">Friends</h2>
+        {friends.length === 0 ? (
+          <p>No friends yet. Add your partner by username.</p>
+        ) : (
+          <ul>
+            {friends.map((friend) => (
+              <li key={friend.id}>{friend.username}</li>
+            ))}
+          </ul>
+        )}
+        <form className="friend-form" onSubmit={handleAddFriend}>
+          <label htmlFor="friend-username">Add friend</label>{' '}
+          <input
+            id="friend-username"
+            value={friendName}
+            onChange={(event) => setFriendName(event.target.value)}
+            placeholder="username"
+            required
+          />
+          <button type="submit">Add</button>
+        </form>
+      </section>
+
+      {!hasActiveTree ? (
+        <section>
+          <p>Start your first shared tree with a friend.</p>
+          <NewTreeForm friends={friends} onConfirm={handleNewTreeConfirmation} />
         </section>
       ) : (
-        <section aria-labelledby="daily-tasks-heading">
-          <h2 id="daily-tasks-heading">Today&apos;s tasks</h2>
-          <div className="task-list">
-            {mockTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                submission={submissionsByTask[task.id] ?? {
-                  currentUser: null,
-                  friendSubmitted: false,
-                }}
-                isCompleted={completedTaskIds.includes(task.id)}
-                onSubmitPhoto={submitCurrentUserPhoto}
-                onSimulateFriendSubmission={simulateFriendSubmission}
-              />
-            ))}
-          </div>
-        </section>
+        <>
+          <p>Complete today&apos;s activities to help your tree grow.</p>
+          <TreeProgress progress={treeProgress} />
+
+          {isTreeCompleted ? (
+            <section aria-labelledby="tree-complete-heading">
+              <h2 id="tree-complete-heading">Your tree has fully bloomed!</h2>
+              <p>You and your friend completed this tree together.</p>
+              {isCreatingNewTree ? (
+                <NewTreeForm friends={friends} onConfirm={handleNewTreeConfirmation} />
+              ) : (
+                <button type="button" onClick={() => setIsCreatingNewTree(true)}>
+                  Start a new tree
+                </button>
+              )}
+            </section>
+          ) : (
+            <section aria-labelledby="daily-tasks-heading">
+              <h2 id="daily-tasks-heading">Today&apos;s tasks</h2>
+              <div className="task-list">
+                {dailyTasks.map((task) => {
+                  const mine = task.completions.find((item) => item.userId === currentUser.id)
+                  const friend = task.completions.find((item) => item.userId !== currentUser.id)
+                  return (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      submission={{
+                        currentUser: mine?.photoUrl
+                          ? { previewUrl: mine.photoUrl, name: 'Your photo' }
+                          : null,
+                        friendSubmitted: Boolean(friend?.photoUrl),
+                      }}
+                      isCompleted={task.completed}
+                      onSubmitPhoto={handleSubmitPhoto}
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </main>
   )

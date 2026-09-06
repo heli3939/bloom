@@ -1,8 +1,24 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
+from app.deps import get_current_user
+from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserPublic
+from app.services.auth import authenticate_user, create_access_token, register_user, user_public
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.get("/")
-def auth_root() -> dict[str, str]:
-    return {"message": "Auth routes are ready"}
+@router.post("/register", response_model=TokenResponse)
+def register(body: RegisterRequest) -> TokenResponse:
+    user = register_user(body.username, body.email, body.password, body.profileImage)
+    return TokenResponse(access_token=create_access_token(user["id"]), user=UserPublic(**user))
+
+
+@router.post("/login", response_model=TokenResponse)
+def login(body: LoginRequest) -> TokenResponse:
+    user = user_public(authenticate_user(body.email, body.password))
+    return TokenResponse(access_token=create_access_token(user["id"]), user=UserPublic(**user))
+
+
+@router.get("/me", response_model=UserPublic)
+def me(current_user: dict = Depends(get_current_user)) -> UserPublic:
+    return UserPublic(**current_user)
